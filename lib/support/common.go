@@ -3,7 +3,27 @@ package support
 import (
 	"fmt"
 	"os"
+	"strings"
 )
+
+// NameList to hold custom flag value for multiple names.
+type NameList []string
+
+func (n *NameList) String() string {
+	return fmt.Sprintf("%v", *n)
+}
+
+// Set parsed the flag value
+func (n *NameList) Set(value string) error {
+	*n = strings.Split(value, ",")
+	return nil
+}
+
+// Value interface for cusmom flag argument.
+type Value interface {
+	String() string
+	Set(string) error
+}
 
 // ValidateRegions prints out error msg and exits for invalid regions.
 func ValidateRegions(regPtr *string) {
