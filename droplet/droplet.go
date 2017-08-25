@@ -12,7 +12,9 @@ import (
 func ParseArgs(args []string) {
 	dropCmd := flag.NewFlagSet("droplet", flag.ExitOnError)
 	// droplet  subcommand flag pointers
-	namePtr := dropCmd.String("name", "", "-name=<volname1[,volname2...]>")
+	// namePtr := dropCmd.String("name", "", "-name=<volname1[,volname2...]>")
+	var multiName support.NameList
+	dropCmd.Var(&multiName, "name", "-name=<name1[,name2...]>")
 	regPtr := dropCmd.String("region", "fra1", "-region=fra1")
 	dropCmd.Parse(args)
 	if len(args) < 1 {
@@ -20,14 +22,15 @@ func ParseArgs(args []string) {
 		dropCmd.PrintDefaults()
 		os.Exit(1)
 	}
-	if dropCmd.Parsed() {
-		if *namePtr == "" {
-			dropCmd.PrintDefaults()
-			os.Exit(1)
-		}
-	}
+	// if dropCmd.Parsed() {
+	// 	if (&multiName).String() == "[]" {
+	// 		// dropCmd.PrintDefaults()
+	// 		os.Exit(1)
+	// 	}
+	// }
 	support.ValidateRegions(regPtr)
-	fmt.Printf("*namePtr = %+v\n", *namePtr)
+	fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
+	// fmt.Printf("*namePtr = %+v\n", *namePtr)
 	fmt.Printf("*regPtr = %+v\n", *regPtr)
 
 }
