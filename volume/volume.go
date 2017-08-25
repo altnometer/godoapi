@@ -12,7 +12,7 @@ import (
 func ParseArgs(args []string) {
 	volCmd := flag.NewFlagSet("volume", flag.ExitOnError)
 	// Volume  subcommand flag pointers
-	NamePtr := volCmd.String("name", "", "-name=<volname>")
+	namePtr := volCmd.String("name", "", "-name=<volname>")
 	regPtr := volCmd.String("region", "fra1", "-region=fra1")
 	volCmd.Parse(args)
 	if len(args) < 1 {
@@ -21,13 +21,13 @@ func ParseArgs(args []string) {
 		os.Exit(1)
 	}
 	if volCmd.Parsed() {
-		if *NamePtr == "" {
+		if *namePtr == "" {
 			volCmd.PrintDefaults()
 			os.Exit(1)
 		}
 	}
 	support.ValidateRegions(regPtr)
-	fmt.Printf("*NamePtr = %+v\n", *NamePtr)
+	fmt.Printf("*namePtr = %+v\n", *namePtr)
 	fmt.Printf("*regPtr = %+v\n", *regPtr)
 
 }
