@@ -12,7 +12,10 @@ import (
 var YellowSp = color.New(color.FgYellow).SprintFunc()
 
 // RedLn colors a line red.
-var RedLn = color.New(color.FgRed).PrintFunc()
+var RedLn = color.New(color.FgRed).PrintlnFunc()
+
+// GreenLn colors a line red.
+var GreenLn = color.New(color.FgGreen).PrintlnFunc()
 
 // RedBold colors the output.
 var RedBold = color.New(color.FgRed, color.Bold)
