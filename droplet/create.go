@@ -1,11 +1,14 @@
 package droplet
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/altnometer/godoapi/lib/support"
+	"github.com/briandowns/spinner"
 	"github.com/digitalocean/godo"
 )
 
@@ -49,7 +52,6 @@ func ParseArgsCreateDrop(args []string) {
 	if sizeIsValid == false {
 		support.Red.Printf("Valid -size values %+v\n", support.DropletSizes)
 	}
-	fmt.Printf("sizeIsValid = %+v\n", sizeIsValid)
 	// if subCmd.Parsed() {
 	// 	if (&multiName).String() == "[]" {
 	// 		// subCmd.PrintDefaults()
@@ -63,20 +65,40 @@ func ParseArgsCreateDrop(args []string) {
 	createRequestData.Tags = multiTag
 	// fmt.Printf("createRequestData = %+v\n", createRequestData)
 	// fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
-	fmt.Printf("multiName[0] = %+v\n", multiName[0])
-	fmt.Printf("(&multiTag).String() = %+v\n", (&multiTag).String())
-	// fmt.Printf("*namePtr = %+v\n", *namePtr)
-	fmt.Printf("*regPtr = %+v\n", *regPtr)
-	fmt.Printf("*sizePtr = %+v\n", *sizePtr)
+	// fmt.Printf("multiName[0] = %+v\n", multiName[0])
+	// fmt.Printf("(&multiTag).String() = %+v\n", (&multiTag).String())
+	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
+	// fmt.Printf("*regPtr = %+v\n", *regPtr)
+	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
 	createDroplet()
 
 }
 func createDroplet() {
-	droplet, _, err := support.DOClient.Droplets.CreateMultiple(support.Ctx, createRequestData)
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Creating %v droplet(s)?[Y/n] ", createRequestData.Names)
+	char, _, err := reader.ReadRune()
+	if err != nil {
+		panic("Cannot read user inut")
+	}
+	if char != 10 && char != 'y' && char != 'Y' {
+		os.Exit(0)
+	}
+	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+	s.Start()
+	droplets, _, err := support.DOClient.Droplets.CreateMultiple(support.Ctx, createRequestData)
+	s.Stop()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("droplet = %+v\n", droplet)
+	// fmt.Printf("droplets = %+v\n", droplets)
+	for _, d := range droplets {
+		fmt.Println("Created droplet with:")
+		fmt.Printf("  d.Name = %+v\n", d.Name)
+		fmt.Printf("  d.ID = %+v\n", d.ID)
+		// fmt.Printf("d.Size = %+v\n", d.Size)
+		// fmt.Printf("d = %+v\n", d)
+		fmt.Println("***************************")
+	}
 
 }
