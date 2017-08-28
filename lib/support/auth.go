@@ -2,7 +2,6 @@ package support
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/digitalocean/godo"
@@ -32,7 +31,7 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 func getToken() string {
 	pat := os.Getenv("DOAUTHTOKEN")
 	if pat == "" {
-		fmt.Println("No DOAUTHTOKEN env variable! Quiting ...")
+		RedLn("No DOAUTHTOKEN env variable! Quiting ...")
 		os.Exit(1)
 	}
 	return pat
