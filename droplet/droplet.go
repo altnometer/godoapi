@@ -1,36 +1,30 @@
 package droplet
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
 	"github.com/altnometer/godoapi/lib/support"
 )
 
+var argDropletFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
+	support.YellowSp("list"), support.YellowSp("create"), support.YellowSp("delete"))
+
 // ParseArgs handles os.Args and calls relevant functions in the package.
 func ParseArgs(args []string) {
-	dropCmd := flag.NewFlagSet("droplet", flag.ExitOnError)
-	// droplet  subcommand flag pointers
-	// namePtr := dropCmd.String("name", "", "-name=<volname1[,volname2...]>")
-	var multiName support.NameList
-	dropCmd.Var(&multiName, "name", "-name=<name1[,name2...]>")
-	regPtr := dropCmd.String("region", "fra1", "-region=fra1")
-	dropCmd.Parse(args)
 	if len(args) < 1 {
-		fmt.Println("Provide the args, please.")
-		dropCmd.PrintDefaults()
+		fmt.Println(argDropletFailMsg)
 		os.Exit(1)
 	}
-	// if dropCmd.Parsed() {
-	// 	if (&multiName).String() == "[]" {
-	// 		// dropCmd.PrintDefaults()
-	// 		os.Exit(1)
-	// 	}
-	// }
-	support.ValidateRegions(regPtr)
-	fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
-	// fmt.Printf("*namePtr = %+v\n", *namePtr)
-	fmt.Printf("*regPtr = %+v\n", *regPtr)
-
+	switch args[0] {
+	case "list":
+		ParseArgsListDrop(args[1:])
+	case "create":
+		ParseArgsCreateDrop(args[1:])
+	default:
+		fmt.Print("Incorrect arg: ")
+		support.RedBold.Println(args[0])
+		fmt.Println(argDropletFailMsg)
+		os.Exit(1)
+	}
 }
