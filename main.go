@@ -5,12 +5,16 @@ import (
 	"os"
 
 	"github.com/altnometer/godoapi/droplet"
+	"github.com/altnometer/godoapi/lib/support"
 	"github.com/altnometer/godoapi/volume"
 )
 
+var argEntryFailMsg = fmt.Sprintf("Provide <%s|%s> subcommand, please.",
+	support.YellowSp("droplet"), support.YellowSp("volume"))
+
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("droplet or volume subcommand is required")
+		fmt.Println(argEntryFailMsg)
 		os.Exit(1)
 	}
 	switch os.Args[1] {
@@ -19,7 +23,7 @@ func main() {
 	case "volume":
 		volume.ParseArgs(os.Args[2:])
 	default:
-		fmt.Println("droplet or volume subcommand is required")
+		fmt.Println(argEntryFailMsg)
 		// fmt.Println("")
 		// fmt.Println("Flags for droplet subcommand:")
 		// dropCmd.PrintDefaults()
