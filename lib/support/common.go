@@ -4,7 +4,26 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
+
+// YellowSp colors str yellow.
+var YellowSp = color.New(color.FgYellow).SprintFunc()
+
+// RedLn colors a line red.
+var RedLn = color.New(color.FgRed).PrintFunc()
+
+// RedBold colors the output.
+var RedBold = color.New(color.FgRed, color.Bold)
+
+// Red colors the output.
+var Red = color.New(color.FgRed)
+
+/////////////// Common droplet properties//////////////////////////////////////
+
+// DropletSizes holds valid values.
+var DropletSizes = []string{"512mb", "1gb", "2gb"}
 
 // NameList to hold custom flag value for multiple names.
 type NameList []string
