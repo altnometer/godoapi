@@ -3,6 +3,8 @@ package droplet
 import (
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/altnometer/godoapi/lib/support"
@@ -29,6 +31,7 @@ func ParseArgsListDrop(args []string) {
 	// }
 	if *listAllPtr {
 		listAllDroplets()
+		// ReturnDropletData()
 	}
 	support.ValidateRegions(regPtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
@@ -54,6 +57,7 @@ func listAllDroplets() {
 			fmt.Printf("d.Name                %+v\n", d.Name)
 			fmt.Printf("d.ID                  %+v\n", d.ID)
 			// fmt.Printf("d.Size = %+v\n", d.Size)
+			fmt.Printf("d.Networks.V4 = %+v\n", d.Networks.V4)
 			fmt.Printf("d.Size.Slug           %+v\n", d.Size.Slug)
 			fmt.Printf("d.Size.Memory         %+v\n", d.Size.Memory)
 			fmt.Printf("d.Size.Vcpus          %+v\n", d.Size.Vcpus)
@@ -65,5 +69,55 @@ func listAllDroplets() {
 	} else {
 		support.GreenLn("No droplets exist.")
 	}
+	// fmt.Printf("droplets = %+v\n", droplets)
+}
+
+// ReturnDropletData returns a list of data for each listed droplet.
+func ReturnDropletData() *[]map[string]string {
+	fmt.Print("Collecting listed droplets data: ")
+	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+	s.Start()
+	opt := &godo.ListOptions{
+		Page:    1,
+		PerPage: 200,
+	}
+	droplets, _, err := support.DOClient.Droplets.List(support.Ctx, opt)
+	s.Stop()
+	fmt.Println("")
+	if err != nil {
+		panic("support.DOclient.Droplets.List() failed.")
+	}
+	dropletsData := make([]map[string]string, 8)
+	if len(droplets) > 0 {
+		for i, d := range droplets {
+			dData := make(map[string]string)
+			dData["ID"] = strconv.Itoa(d.ID)
+			dData["Name"] = d.Name
+			dData["Tags"] = strings.Join(d.Tags[:], ",")
+			dData["Region"] = d.Region.Slug
+			dropletsData[i] = dData
+			// fmt.Printf("d.Name                %+v\n", d.Name)
+			// fmt.Printf("d.ID                  %+v\n", d.ID)
+			// fmt.Printf("d.Region.Slug         %+v\n", d.Region.Slug)
+			// fmt.Printf("d.Tags                %+v\n", d.Tags)
+			// // fmt.Printf("d.Size = %+v\n", d.Size)
+			// fmt.Printf("d.Size.Slug           %+v\n", d.Size.Slug)
+			// fmt.Printf("d.Size.Memory         %+v\n", d.Size.Memory)
+			// fmt.Printf("d.Size.Vcpus          %+v\n", d.Size.Vcpus)
+			// fmt.Printf("d.Size.Disk           %+v\n", d.Size.Disk)
+			// fmt.Printf("d.Size.PriceMonthly   %+v\n", d.Size.PriceMonthly)
+			// fmt.Printf("d = %+v\n", d)
+			// fmt.Println("***************************")
+		}
+	} else {
+		support.GreenLn("No droplets exist.")
+	}
+	return &dropletsData
+	// for _, dData := range dropletsData {
+	// 	if dData != nil {
+	// 		fmt.Printf("dData = %+v\n", dData)
+	// 	}
+	// }
+	// fmt.Printf("dropletsData = %+v\n", dropletsData)
 	// fmt.Printf("droplets = %+v\n", droplets)
 }
