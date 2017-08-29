@@ -15,9 +15,11 @@ import (
 // var client = support.GetDOClient()
 
 var createRequestData = &godo.DropletMultiCreateRequest{
-	Names:  []string{"sub-01.example.com"},
-	Region: "nyc3",
-	Size:   "512mb",
+	Names:             []string{"sub-01.example.com"},
+	SSHKeys:           []godo.DropletCreateSSHKey{support.SSHKeys},
+	PrivateNetworking: true,
+	Region:            "nyc3",
+	Size:              "512mb",
 	Image: godo.DropletCreateImage{
 		Slug: "ubuntu-16-04-x64",
 	},
