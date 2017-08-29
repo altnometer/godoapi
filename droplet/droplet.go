@@ -21,6 +21,8 @@ func ParseArgs(args []string) {
 		ParseArgsListDrop(args[1:])
 	case "create":
 		ParseArgsCreateDrop(args[1:])
+	case "delete":
+		ParseArgsDeleteDrop(args[1:])
 	default:
 		fmt.Print("Incorrect arg: ")
 		support.RedBold.Println(args[0])
