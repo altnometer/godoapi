@@ -74,11 +74,16 @@ func ValidateRegions(regPtr *string) {
 // GetUserInput query for a user input and return int.
 func GetUserInput(promt string) string {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println(promt)
+	fmt.Print(promt)
 	text, err := reader.ReadString('\n')
 	// convert CRLF to LF
 	if err != nil {
 		panic("Cannot read user inut")
+	}
+	text = strings.Replace(text, "\n", "", -1)
+	if text == "" {
+		RedLn("Input is required!")
+		os.Exit(1)
 	}
 	return strings.Replace(text, "\n", "", -1)
 }
