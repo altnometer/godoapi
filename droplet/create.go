@@ -14,7 +14,7 @@ import (
 
 // var client = support.GetDOClient()
 
-var createRequestData = &godo.DropletMultiCreateRequest{
+var CreateRequestData = &godo.DropletMultiCreateRequest{
 	Names:             []string{"sub-01.example.com"},
 	SSHKeys:           []godo.DropletCreateSSHKey{support.SSHKeys},
 	PrivateNetworking: true,
@@ -61,23 +61,23 @@ func ParseArgsCreateDrop(args []string) {
 	// 	}
 	// }
 	support.ValidateRegions(regPtr)
-	createRequestData.Size = *sizePtr
-	createRequestData.Region = *regPtr
-	createRequestData.Names = multiName
-	createRequestData.Tags = multiTag
-	// fmt.Printf("createRequestData = %+v\n", createRequestData)
+	CreateRequestData.Size = *sizePtr
+	CreateRequestData.Region = *regPtr
+	CreateRequestData.Names = multiName
+	CreateRequestData.Tags = multiTag
+	// fmt.Printf("CreateRequestData = %+v\n", CreateRequestData)
 	// fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
 	// fmt.Printf("multiName[0] = %+v\n", multiName[0])
 	// fmt.Printf("(&multiTag).String() = %+v\n", (&multiTag).String())
 	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
 	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
-	createDroplet()
+	createDroplet(CreateRequestData)
 
 }
-func createDroplet() {
+func createDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Creating %v droplet(s)?[Y/n] ", createRequestData.Names)
+	fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
 	char, _, err := reader.ReadRune()
 	if err != nil {
 		panic("Cannot read user inut")
@@ -87,7 +87,7 @@ func createDroplet() {
 	}
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
-	droplets, _, err := support.DOClient.Droplets.CreateMultiple(support.Ctx, createRequestData)
+	droplets, _, err := support.DOClient.Droplets.CreateMultiple(support.Ctx, reqDataPtr)
 	s.Stop()
 	if err != nil {
 		panic(err)
