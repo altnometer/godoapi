@@ -75,6 +75,8 @@ func ParseArgsCreateDrop(args []string) {
 	CreateDroplet(CreateRequestData)
 
 }
+
+// CreateDroplet creates a droplet with provided specs.
 func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
