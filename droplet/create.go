@@ -14,6 +14,7 @@ import (
 
 // var client = support.GetDOClient()
 
+// CreateRequestData holds droplets specs.
 var CreateRequestData = &godo.DropletMultiCreateRequest{
 	Names:             []string{"sub-01.example.com"},
 	SSHKeys:           []godo.DropletCreateSSHKey{support.SSHKeys},
