@@ -26,6 +26,9 @@ var Red = color.New(color.FgRed)
 
 /////////////// Common droplet properties//////////////////////////////////////
 
+// MaxDroplets mas allowed droplets. Used in declaring slices of droplets.
+var MaxDroplets = 8
+
 // SSHKeys for the droplet.
 var SSHKeys = godo.DropletCreateSSHKey{Fingerprint: "2f:2a:c4:eb:ec:38:35:cd:2a:d9:65:cf:59:12:df:44"}
 
