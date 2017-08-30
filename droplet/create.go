@@ -72,10 +72,10 @@ func ParseArgsCreateDrop(args []string) {
 	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
 	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
-	createDroplet(CreateRequestData)
+	CreateDroplet(CreateRequestData)
 
 }
-func createDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
+func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
 	char, _, err := reader.ReadRune()
