@@ -87,7 +87,7 @@ func ReturnDropletData() *[]map[string]string {
 	if err != nil {
 		panic("support.DOclient.Droplets.List() failed.")
 	}
-	dropletsData := make([]map[string]string, 8)
+	dropletsData := make([]map[string]string, support.MaxDroplets)
 	if len(droplets) > 0 {
 		for i, d := range droplets {
 			dData := make(map[string]string)
