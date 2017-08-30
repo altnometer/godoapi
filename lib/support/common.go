@@ -68,3 +68,17 @@ func ValidateRegions(regPtr *string) {
 		os.Exit(1)
 	}
 }
+
+/////////////////////Supporting functions//////////////////////////////////////
+
+// GetUserInput query for a user input and return int.
+func GetUserInput(promt string) string {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println(promt)
+	text, err := reader.ReadString('\n')
+	// convert CRLF to LF
+	if err != nil {
+		panic("Cannot read user inut")
+	}
+	return strings.Replace(text, "\n", "", -1)
+}
