@@ -28,6 +28,14 @@ var CreateRequestData = &godo.DropletMultiCreateRequest{
 	Tags: []string{"web"},
 }
 
+// CreatedDrpSpecs holds specs of newly created droplet.
+type CreatedDrpSpecs struct {
+	Name      string
+	ID        int
+	PublicIP  string
+	PrivateIP string
+}
+
 // ParseArgsCreateDrop handles os.Args and calls relevant functions in the package.
 func ParseArgsCreateDrop(args []string) {
 	// client := support.GetDOClient()
@@ -78,7 +86,7 @@ func ParseArgsCreateDrop(args []string) {
 }
 
 // CreateDroplet creates a droplet with provided specs.
-func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
+func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) []CreatedDrpSpecs {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
 	char, _, err := reader.ReadRune()
@@ -97,7 +105,18 @@ func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
 	}
 
 	// fmt.Printf("droplets = %+v\n", droplets)
-	for _, d := range droplets {
+	dspecs := make([]CreatedDrpSpecs, support.MaxDroplets)
+	for i, d := range droplets {
+		ds := CreatedDrpSpecs{Name: d.Name, ID: d.ID}
+		for _, n := range d.Networks.V4 {
+			if n.Type == "public" {
+				ds.PublicIP = n.IPAddress
+			}
+			if n.Type == "private" {
+				ds.PrivateIP = n.IPAddress
+			}
+		}
+		dspecs[i] = ds
 		fmt.Println("Created droplet with:")
 		fmt.Printf("  d.Name = %+v\n", d.Name)
 		fmt.Printf("  d.ID = %+v\n", d.ID)
@@ -105,5 +124,6 @@ func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) {
 		// fmt.Printf("d = %+v\n", d)
 		fmt.Println("***************************")
 	}
+	return dspecs
 
 }
