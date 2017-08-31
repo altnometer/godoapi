@@ -108,19 +108,19 @@ func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) []CreatedDrpSpecs
 	dspecs := make([]CreatedDrpSpecs, support.MaxDroplets)
 	for i, d := range droplets {
 		ds := CreatedDrpSpecs{Name: d.Name, ID: d.ID}
-		for _, n := range d.Networks.V4 {
-			if n.Type == "public" {
-				ds.PublicIP = n.IPAddress
-			}
-			if n.Type == "private" {
-				ds.PrivateIP = n.IPAddress
-			}
-		}
+		// Networks are not available at this stage.
+		// for _, n := range d.Networks.V4 {
+		// 	if n.Type == "public" {
+		// 		ds.PublicIP = n.IPAddress
+		// 	}
+		// 	if n.Type == "private" {
+		// 		ds.PrivateIP = n.IPAddress
+		// 	}
+		// }
 		dspecs[i] = ds
 		fmt.Println("Created droplet with:")
 		fmt.Printf("  d.Name = %+v\n", d.Name)
 		fmt.Printf("  d.ID = %+v\n", d.ID)
-		fmt.Printf("  ds.PublicIP = %+v\n", ds.PublicIP)
 		// fmt.Printf("d.Size = %+v\n", d.Size)
 		// fmt.Printf("d = %+v\n", d)
 		fmt.Println("***************************")
