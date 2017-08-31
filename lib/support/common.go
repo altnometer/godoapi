@@ -16,11 +16,14 @@ var YellowSp = color.New(color.FgYellow).SprintFunc()
 // YellowLn colors a line red.
 var YellowLn = color.New(color.FgYellow).PrintlnFunc()
 
-// RedLn colors a line red.
-var RedLn = color.New(color.FgRed).PrintlnFunc()
-
 // GreenLn colors a line red.
 var GreenLn = color.New(color.FgGreen).PrintlnFunc()
+
+// RedPf output with interpolation colored red.
+var RedPf = color.New(color.FgRed).PrintfFunc()
+
+// RedLn colors a line red.
+var RedLn = color.New(color.FgRed).PrintlnFunc()
 
 // RedBold colors the output.
 var RedBold = color.New(color.FgRed, color.Bold)
