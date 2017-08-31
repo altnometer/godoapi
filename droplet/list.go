@@ -144,3 +144,42 @@ func ReturnDropletByID(id int) map[string]string {
 	dData["Region"] = d.Region.Slug
 	return dData
 }
+
+// ReturnDropletsByTag return droplets identified by the provided tag.
+func ReturnDropletsByTag(tag string) *[]map[string]string {
+	fmt.Print("Collecting listed droplets data fetched by tag name: ")
+	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+	s.Start()
+	opt := &godo.ListOptions{
+		Page:    1,
+		PerPage: 200,
+	}
+	droplets, _, err := support.DOClient.Droplets.ListByTag(support.Ctx, tag, opt)
+	s.Stop()
+	fmt.Println("")
+	if err != nil {
+		panic("support.DOclient.Droplets.ListByTag() failed.")
+	}
+	dropletsData := make([]map[string]string, support.MaxDroplets)
+	if len(droplets) > 0 {
+		for i, d := range droplets {
+			dData := make(map[string]string)
+			dData["ID"] = strconv.Itoa(d.ID)
+			dData["Name"] = d.Name
+			dData["Tags"] = strings.Join(d.Tags[:], ",")
+			dData["Region"] = d.Region.Slug
+			for _, n := range d.Networks.V4 {
+				if n.Type == "public" {
+					dData["PublicIP"] = n.IPAddress
+				}
+				if n.Type == "private" {
+					dData["PrivateIP"] = n.IPAddress
+				}
+			}
+			dropletsData[i] = dData
+		}
+	} else {
+		support.GreenLn("No droplets exist.")
+	}
+	return &dropletsData
+}
