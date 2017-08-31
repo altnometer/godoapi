@@ -120,6 +120,7 @@ func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) []CreatedDrpSpecs
 		fmt.Println("Created droplet with:")
 		fmt.Printf("  d.Name = %+v\n", d.Name)
 		fmt.Printf("  d.ID = %+v\n", d.ID)
+		fmt.Printf("  ds.PublicIP = %+v\n", ds.PublicIP)
 		// fmt.Printf("d.Size = %+v\n", d.Size)
 		// fmt.Printf("d = %+v\n", d)
 		fmt.Println("***************************")
