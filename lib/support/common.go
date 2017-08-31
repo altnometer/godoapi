@@ -1,6 +1,7 @@
 package support
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -11,6 +12,9 @@ import (
 
 // YellowSp colors str yellow.
 var YellowSp = color.New(color.FgYellow).SprintFunc()
+
+// YellowLn colors a line red.
+var YellowLn = color.New(color.FgYellow).PrintlnFunc()
 
 // RedLn colors a line red.
 var RedLn = color.New(color.FgRed).PrintlnFunc()
