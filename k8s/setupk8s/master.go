@@ -13,6 +13,14 @@ import (
 
 // SetUpMaster would setup k8s master.
 func SetUpMaster(env, reg string) {
+	master1Name := "master-1"
+	runningMasters := *droplet.ReturnDropletsByTag("master")
+	for _, d := range runningMasters {
+		if d["Name"] == master1Name {
+			support.RedPf("Droplet with %s name already exist!", master1Name)
+			os.Exit(1)
+		}
+	}
 	userName := os.Getenv("DOHostUsername")
 	if userName == "" {
 		support.YellowLn("You can set env var DOHostUsername!")
