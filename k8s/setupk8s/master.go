@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/altnometer/godoapi/droplet"
 	"github.com/altnometer/godoapi/lib/support"
+	"github.com/briandowns/spinner"
 )
 
 // SetUpMaster would setup k8s master.
@@ -33,14 +35,26 @@ func SetUpMaster(env, reg string) {
 	reqDataPtr.Names = []string{"master-1"}
 	reqDataPtr.Tags = []string{"master", env}
 	drSpecs := droplet.CreateDroplet(reqDataPtr)
+	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+	s.Start()
+	// Give it some time for IPs to be assigned to the droplets.
+	time.Sleep(time.Second * 2)
+	s.Stop()
 	var IP string
-	for _, dr := range drSpecs {
-		if dr.Name != "" {
-			IP = dr.PublicIP
+	for _, d := range drSpecs {
+		if d.Name != "" {
+			support.RedLn("Only SINGLE master is handled currently!!!")
+			dData := droplet.ReturnDropletByID(d.ID)
+			s.Start()
+			IP = dData["PublicIP"]
+			s.Stop()
+			break
 		}
 	}
 	if IP == "" {
 		panic("No IP for k8s master host, cannot continue!")
+	} else {
+		fmt.Printf("IP = %+v\n", IP)
 	}
 	// execSSH(userName, IP, sshKeyPath)
 	// bash master.sh --TARGET_MACHINE_IP 165.227.134.109 --PATH_TO_SSH_PRIV_KEYS ~/.ssh/circleci --USERNAME sally --USER_PASSWORD las
@@ -61,7 +75,9 @@ func SetUpMaster(env, reg string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
+	s.Start()
 	err := cmd.Run()
+	s.Stop()
 	if err != nil {
 		panic(err)
 	}
