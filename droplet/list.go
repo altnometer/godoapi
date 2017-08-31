@@ -31,7 +31,7 @@ func ParseArgsListDrop(args []string) {
 	// }
 	if *listAllPtr {
 		listAllDroplets()
-		// ReturnDropletData()
+		// ReturnDropletsData()
 	}
 	support.ValidateRegions(regPtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
@@ -72,8 +72,8 @@ func listAllDroplets() {
 	// fmt.Printf("droplets = %+v\n", droplets)
 }
 
-// ReturnDropletData returns a list of data for each listed droplet.
-func ReturnDropletData() *[]map[string]string {
+// ReturnDropletsData returns a list of data for each listed droplet.
+func ReturnDropletsData() *[]map[string]string {
 	fmt.Print("Collecting listed droplets data: ")
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()

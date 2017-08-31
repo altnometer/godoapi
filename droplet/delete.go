@@ -41,7 +41,7 @@ func ParseArgsDeleteDrop(args []string) {
 
 }
 func deleteAllDroplets() {
-	droplets := *ReturnDropletData()
+	droplets := *ReturnDropletsData()
 	for _, dData := range droplets {
 		if dData != nil {
 			dID, err := strconv.Atoi(dData["ID"])
