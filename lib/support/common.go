@@ -10,11 +10,14 @@ import (
 	"github.com/fatih/color"
 )
 
-// YellowSp colors str yellow.
+// YellowSp colors str.
 var YellowSp = color.New(color.FgYellow).SprintFunc()
 
-// YellowLn colors a line red.
+// YellowLn colors a line.
 var YellowLn = color.New(color.FgYellow).PrintlnFunc()
+
+// YellowPf color output with interpolation.
+var YellowPf = color.New(color.FgYellow).PrintfFunc()
 
 // GreenLn colors a line red.
 var GreenLn = color.New(color.FgGreen).PrintlnFunc()
