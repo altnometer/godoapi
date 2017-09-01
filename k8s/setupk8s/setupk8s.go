@@ -16,7 +16,8 @@ func ParseArgs(args []string) {
 		// support.ValidateRegions(regPtr)
 		switch *envPtr {
 		case "dev":
-			SetUpMaster(*envPtr, *regPtr)
+			ip, token := SetUpMaster(*envPtr, *regPtr)
+			SetUpNode(*envPtr, *regPtr, ip, token)
 		default:
 			support.RedLn("Provide valid -env value, please.")
 		}
