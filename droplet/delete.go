@@ -60,7 +60,7 @@ func deleteAllDroplets() {
 				panic(err)
 			}
 			if char == 10 && char != 'y' && char != 'Y' {
-				os.Exit(0)
+				continue
 			}
 			s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 			s.Start()
