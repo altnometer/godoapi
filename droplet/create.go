@@ -88,7 +88,8 @@ func ParseArgsCreateDrop(args []string) {
 // CreateDroplet creates a droplet with provided specs.
 func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) []CreatedDrpSpecs {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
+	support.YellowPf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
+	// fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
 	char, _, err := reader.ReadRune()
 	if err != nil {
 		panic("Cannot read user inut")
