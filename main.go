@@ -1,3 +1,4 @@
+// Deploy k8s on digitalocean.
 package main
 
 import (
