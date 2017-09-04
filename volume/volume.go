@@ -1,10 +1,12 @@
 package volume
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/altnometer/godoapi/lib/support"
+	"github.com/digitalocean/godo"
 )
 
 var argVolumeFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s> subcommand, please.",
@@ -35,34 +37,49 @@ func ParseArgs(args []string) {
 
 // ParseArgsListVol handles 'volume list' subcommand.
 func ParseArgsListVol(args []string) {
-	// volCmd := flag.NewFlagSet("list", flag.ExitOnError)
-	fmt.Println("'list' subcmd for volumes is not implemented yet")
+	ListAll()
 	return
-	// namePtr := volCmd.String("name", "", "-name=<volname>")
-	// regPtr := volCmd.String("region", "fra1", "-region=fra1")
-	// volCmd.Parse(args)
-	// if len(args) < 1 {
-	// 	fmt.Println("Provide the args, please.")
-	// 	volCmd.PrintDefaults()
-	// 	os.Exit(1)
-	// }
-	// if volCmd.Parsed() {
-	// 	if *namePtr == "" {
-	// 		volCmd.PrintDefaults()
-	// 		os.Exit(1)
-	// 	}
-	// }
-	// support.ValidateRegions(regPtr)
-	// fmt.Printf("*namePtr = %+v\n", *namePtr)
-	// fmt.Printf("*regPtr = %+v\n", *regPtr)
-
 }
 
 // ParseArgsCreateVol handles 'volume create' subcommand.
 func ParseArgsCreateVol(args []string) {
-	// volCmd := flag.NewFlagSet("create", flag.ExitOnError)
-	fmt.Println("'create' subcmd for volumes is not implemented yet")
-	return
+	volCmd := flag.NewFlagSet("create", flag.ExitOnError)
+	namePtr := volCmd.String("name", "", "-name=<volname>")
+	regPtr := volCmd.String("region", "fra1", "-region=fra1")
+	descPtr := volCmd.String("description", "", "-description=<\"your volume description\">")
+	sizePtr := volCmd.Int("size", 0, "-size=<5|10|...>")
+	volCmd.Parse(args)
+	if len(args) < 1 {
+		fmt.Println("Provide the args, please.")
+		volCmd.PrintDefaults()
+		os.Exit(1)
+	}
+	if volCmd.Parsed() {
+		if *namePtr == "" {
+			volCmd.PrintDefaults()
+			os.Exit(1)
+		}
+		if *descPtr == "" {
+			volCmd.PrintDefaults()
+			os.Exit(1)
+		}
+		if *sizePtr == 0 {
+			volCmd.PrintDefaults()
+			os.Exit(1)
+		}
+	}
+	support.ValidateRegions(regPtr)
+	// fmt.Printf("*namePtr = %+v\n", *namePtr)
+	// fmt.Printf("*regPtr = %+v\n", *regPtr)
+	// fmt.Printf("*descPtr = %+v\n", *descPtr)
+
+	createVolData := &godo.VolumeCreateRequest{
+		Region:        *regPtr,
+		Name:          *namePtr,
+		Description:   *descPtr,
+		SizeGigaBytes: int64(*sizePtr),
+	}
+	Create(createVolData)
 }
 
 // ParseArgsDetachVol handles 'volume detach' subcommand.
@@ -74,7 +91,27 @@ func ParseArgsDetachVol(args []string) {
 
 // ParseArgsDeleteVol handles 'volume delete' subcommand.
 func ParseArgsDeleteVol(args []string) {
-	// volCmd := flag.NewFlagSet("delete", flag.ExitOnError)
-	fmt.Println("'delete' subcmd for volumes is not implemented yet")
+	subCmd := flag.NewFlagSet("delete", flag.ExitOnError)
+	// regPtr := subCmd.String("region", "fra1", "-region=fra1")
+	var multiTag support.NameList
+	// TODO: add functionality fo 'all' tag option
+	// subCmd.Var(&multiTag, "tag", "-tag=<all|tag1[,tag2...]>")
+	subCmd.Var(&multiTag, "tag", "-tag=<all>")
+
+	subCmd.Parse(args)
+	if len(args) < 1 {
+		fmt.Println("Provide the args, please.")
+		subCmd.PrintDefaults()
+		os.Exit(1)
+	}
+	// if subCmd.Parsed() {
+	// 	if (&multiName).String() == "[]" {
+	// 		// subCmd.PrintDefaults()
+	// 		os.Exit(1)
+	// 	}
+	// }
+	if multiTag[0] == "all" {
+		DeleteAll()
+	}
 	return
 }
