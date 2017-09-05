@@ -9,11 +9,13 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-var argVolumeFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s> subcommand, please.",
-	support.YellowSp("list"), support.YellowSp("create"), support.YellowSp("detach"), support.YellowSp("delete"))
+var argVolumeFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s|%s> subcommand, please.",
+	support.YellowSp("list"), support.YellowSp("create"),
+	support.YellowSp("attach"), support.YellowSp("detach"),
+	support.YellowSp("delete"))
 
 // ParseArgs handles os.Args and calls relevant functions in the package.
-func ParseArgs(args []string) {
+func ParseArgs(args []string) error {
 	if len(args) < 1 {
 		fmt.Println(argVolumeFailMsg)
 		os.Exit(1)
@@ -23,6 +25,8 @@ func ParseArgs(args []string) {
 		ParseArgsListVol(args[1:])
 	case "create":
 		ParseArgsCreateVol(args[1:])
+	case "attach":
+		return ParseArgsAttachVol(args[1:])
 	case "detach":
 		ParseArgsDetachVol(args[1:])
 	case "delete":
@@ -33,6 +37,7 @@ func ParseArgs(args []string) {
 		fmt.Println(argVolumeFailMsg)
 		os.Exit(1)
 	}
+	return nil
 }
 
 // ParseArgsListVol handles 'volume list' subcommand.
@@ -80,6 +85,45 @@ func ParseArgsCreateVol(args []string) {
 		SizeGigaBytes: int64(*sizePtr),
 	}
 	Create(createVolData)
+}
+
+// ParseArgsAttachVol handles 'volume create' subcommand.
+func ParseArgsAttachVol(args []string) error {
+	volCmd := flag.NewFlagSet("attach", flag.ExitOnError)
+	volNamePtr := volCmd.String("vol-name", "", "--vol-name=<volume-name>")
+	dropNamePtr := volCmd.String("drop-name", "", "--drop-name=<droplet-name|volume-name>")
+	regPtr := volCmd.String("region", "fra1", "-region=fra1")
+	descPtr := volCmd.String("description", "", "-description=<\"your volume description\">")
+	sizePtr := volCmd.Int("size", 10, "-size=<5|10|...>")
+	volCmd.Parse(args)
+	if len(args) < 1 {
+		fmt.Println("Provide the args, please.")
+		volCmd.PrintDefaults()
+		return support.ErrBadArgs
+	}
+	if volCmd.Parsed() {
+		if *volNamePtr == "" {
+			volCmd.PrintDefaults()
+			return support.ErrBadArgs
+		}
+		if *dropNamePtr == "" {
+			*dropNamePtr = *volNamePtr
+		}
+	}
+	if err := support.ValidateRegions(regPtr); err != nil {
+		return err
+	}
+	// fmt.Printf("*namePtr = %+v\n", *namePtr)
+	// fmt.Printf("*regPtr = %+v\n", *regPtr)
+	// fmt.Printf("*descPtr = %+v\n", *descPtr)
+
+	createVolData := &godo.VolumeCreateRequest{
+		Region:        *regPtr,
+		Name:          *volNamePtr,
+		Description:   *descPtr,
+		SizeGigaBytes: int64(*sizePtr),
+	}
+	return Attach(createVolData, *dropNamePtr)
 }
 
 // ParseArgsDetachVol handles 'volume detach' subcommand.
