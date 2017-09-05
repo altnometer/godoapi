@@ -16,6 +16,9 @@ import (
 // ErrBadArgs used when no, or not all args provided.
 var ErrBadArgs = errors.New("no, not enough, or wrong args provided")
 
+// ErrUserSaysQuit used when user input signals stop exucting the program.
+var ErrUserSaysQuit = errors.New("user says stop execution")
+
 // YellowSp colors str.
 var YellowSp = color.New(color.FgYellow).SprintFunc()
 
