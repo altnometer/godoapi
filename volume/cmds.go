@@ -44,7 +44,18 @@ func (v Vol) Delete() (*godo.Response, error) {
 }
 
 // Create creates a volume with provided specs.
-func Create(volCreateData *godo.VolumeCreateRequest) *godo.Volume {
+func Create(volCreateData *godo.VolumeCreateRequest) (*godo.Volume, error) {
+	reader := bufio.NewReader(os.Stdin)
+	support.YellowPf("Creating %v volume?[Y/n] ", volCreateData.Name)
+	char, _, err := reader.ReadRune()
+	if err != nil {
+		return nil, fmt.Errorf("failed reading userinput: %v", err)
+	}
+	if char != 10 && char != 'y' && char != 'Y' {
+		return nil, support.ErrUserSaysQuit
+	}
+	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+	s.Start()
 	volume, _, err := support.DOClient.Storage.CreateVolume(support.Ctx, volCreateData)
 	if err != nil {
 		log.Fatal(err)
@@ -52,7 +63,7 @@ func Create(volCreateData *godo.VolumeCreateRequest) *godo.Volume {
 	v := Vol{*volume}
 	// fmt.Printf("volume = %+v\n", volume)
 	fmt.Println(v)
-	return volume
+	return volume, nil
 }
 
 // ListAll lists all volumes.
@@ -148,7 +159,11 @@ func Attach(vd *godo.VolumeCreateRequest, dropName string) error {
 		}
 	}
 	if volID == "" {
-		volume := Create(vd)
+		volume, err := Create(vd)
+		if err != nil {
+			return err
+		}
+
 		volID = volume.ID
 	}
 	droplets := *droplet.ReturnDropletsData()
