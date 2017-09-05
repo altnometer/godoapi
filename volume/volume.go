@@ -9,9 +9,10 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-var argVolumeFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s|%s> subcommand, please.",
+var argVolumeFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s|%s|%s> subcommand, please.",
 	support.YellowSp("list"), support.YellowSp("create"),
 	support.YellowSp("attach"), support.YellowSp("detach"),
+	support.YellowSp("mount"),
 	support.YellowSp("delete"))
 
 // ParseArgs handles os.Args and calls relevant functions in the package.
@@ -29,6 +30,8 @@ func ParseArgs(args []string) error {
 		return ParseArgsAttachVol(args[1:])
 	case "detach":
 		ParseArgsDetachVol(args[1:])
+	case "mount":
+		return ParseArgsMountVol(args[1:])
 	case "delete":
 		ParseArgsDeleteVol(args[1:])
 	default:
@@ -128,6 +131,39 @@ func ParseArgsAttachVol(args []string) error {
 		SizeGigaBytes: int64(*sizePtr),
 	}
 	return Attach(createVolData, *dropNamePtr)
+}
+
+// ParseArgsMountVol mounts specified by args volume to droplet with given name
+func ParseArgsMountVol(args []string) error {
+	volCmd := flag.NewFlagSet("mount", flag.ExitOnError)
+	volNamePtr := volCmd.String("vol-name", "", "--vol-name=<volume-name>")
+	dropNamePtr := volCmd.String("drop-name", "", "--drop-name=<droplet-name|volume-name>")
+	regPtr := volCmd.String("region", "fra1", "-region=fra1")
+	sizePtr := volCmd.Int("size", 10, "-size=<5|10|...>")
+	volCmd.Parse(args)
+	if len(args) < 1 {
+		fmt.Println("Provide the args, please.")
+		volCmd.PrintDefaults()
+		return support.ErrBadArgs
+	}
+	if volCmd.Parsed() {
+		if *volNamePtr == "" {
+			volCmd.PrintDefaults()
+			return support.ErrBadArgs
+		}
+		if *dropNamePtr == "" {
+			*dropNamePtr = *volNamePtr
+		}
+	}
+	if err := support.ValidateRegions(regPtr); err != nil {
+		return err
+	}
+	createVolData := &godo.VolumeCreateRequest{
+		Region:        *regPtr,
+		Name:          *volNamePtr,
+		SizeGigaBytes: int64(*sizePtr),
+	}
+	return Mount(createVolData, *dropNamePtr)
 }
 
 // ParseArgsDetachVol handles 'volume detach' subcommand.
