@@ -12,20 +12,21 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-// var client = support.GetDOClient()
-
-// CreateRequestData holds droplets specs.
-var CreateRequestData = &godo.DropletMultiCreateRequest{
-	Names:             []string{"sub-01.example.com"},
-	SSHKeys:           []godo.DropletCreateSSHKey{support.SSHKeys},
-	PrivateNetworking: true,
-	Region:            "nyc3",
-	Size:              "512mb",
-	Image: godo.DropletCreateImage{
-		Slug: "ubuntu-16-04-x64",
-	},
-	IPv6: true,
-	Tags: []string{"web"},
+// GetDefaultDropCreateData return &godo.DropletMultiCreateRequest with
+// some default values
+func GetDefaultDropCreateData() *godo.DropletMultiCreateRequest {
+	return &godo.DropletMultiCreateRequest{
+		Names:             []string{"sub-01.example.com"},
+		SSHKeys:           []godo.DropletCreateSSHKey{support.SSHKeys},
+		PrivateNetworking: true,
+		Region:            "fra1",
+		Size:              "512mb",
+		Image: godo.DropletCreateImage{
+			Slug: "ubuntu-16-04-x64",
+		},
+		IPv6: true,
+		Tags: []string{"web"},
+	}
 }
 
 // CreatedDrpSpecs holds specs of newly created droplet.
@@ -70,18 +71,19 @@ func ParseArgsCreateDrop(args []string) {
 	// 	}
 	// }
 	support.ValidateRegions(regPtr)
-	CreateRequestData.Size = *sizePtr
-	CreateRequestData.Region = *regPtr
-	CreateRequestData.Names = multiName
-	CreateRequestData.Tags = multiTag
-	// fmt.Printf("CreateRequestData = %+v\n", CreateRequestData)
+	createDropData := GetDefaultDropCreateData()
+	createDropData.Size = *sizePtr
+	createDropData.Region = *regPtr
+	createDropData.Names = multiName
+	createDropData.Tags = multiTag
+	// fmt.Printf("createDropData = %+v\n", createDropData)
 	// fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
 	// fmt.Printf("multiName[0] = %+v\n", multiName[0])
 	// fmt.Printf("(&multiTag).String() = %+v\n", (&multiTag).String())
 	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
 	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
-	CreateDroplet(CreateRequestData)
+	CreateDroplet(createDropData)
 
 }
 
