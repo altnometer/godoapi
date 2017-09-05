@@ -2,6 +2,7 @@ package support
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -9,6 +10,11 @@ import (
 	"github.com/digitalocean/godo"
 	"github.com/fatih/color"
 )
+
+/////////////////////////////errors///////////////////////////////////////////
+
+// ErrBadArgs used when no, or not all args provided.
+var ErrBadArgs = errors.New("no, not enough, or wrong args provided")
 
 // YellowSp colors str.
 var YellowSp = color.New(color.FgYellow).SprintFunc()
@@ -65,9 +71,9 @@ type Value interface {
 }
 
 // ValidateRegions prints out error msg and exits for invalid regions.
-func ValidateRegions(regPtr *string) {
+func ValidateRegions(regPtr *string) error {
 	regions := map[string]bool{"fra1": true}
-	if _, validChoice := regions[*regPtr]; !validChoice {
+	if _, valExist := regions[*regPtr]; !valExist {
 		keys := make([]string, len(regions))
 		i := 0
 		for k := range regions {
@@ -75,8 +81,9 @@ func ValidateRegions(regPtr *string) {
 			i++
 		}
 		fmt.Printf("valid choices for region field are: %+v\n", keys)
-		os.Exit(1)
+		return ErrBadArgs
 	}
+	return nil
 }
 
 /////////////////////Supporting functions//////////////////////////////////////
