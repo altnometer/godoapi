@@ -47,7 +47,7 @@ func ParseArgsListVol(args []string) {
 }
 
 // ParseArgsCreateVol handles 'volume create' subcommand.
-func ParseArgsCreateVol(args []string) {
+func ParseArgsCreateVol(args []string) error {
 	volCmd := flag.NewFlagSet("create", flag.ExitOnError)
 	namePtr := volCmd.String("name", "", "-name=<volname>")
 	regPtr := volCmd.String("region", "fra1", "-region=fra1")
@@ -84,7 +84,11 @@ func ParseArgsCreateVol(args []string) {
 		Description:   *descPtr,
 		SizeGigaBytes: int64(*sizePtr),
 	}
-	Create(createVolData)
+	_, err := Create(createVolData)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ParseArgsAttachVol handles 'volume create' subcommand.
