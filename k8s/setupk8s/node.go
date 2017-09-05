@@ -22,7 +22,7 @@ apt-get install -y --allow-unauthenticated kubelet kubeadm=1.7.0-00 kubectl kube
 func SetUpNode(env, reg, ip, token string) {
 	userDataPart2 := fmt.Sprintf("\nkubeadm join --token %s %s:6443", token, ip)
 	userData := fmt.Sprintln(userDataPart1, userDataPart2)
-	reqDataPtr := droplet.CreateRequestData
+	reqDataPtr := droplet.GetDefaultDropCreateData()
 	reqDataPtr.Size = "1gb"
 	reqDataPtr.Region = reg
 	reqDataPtr.Names = []string{"node-1"}

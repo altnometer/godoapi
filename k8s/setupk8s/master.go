@@ -49,7 +49,7 @@ func SetUpMaster(env, reg string) (string, string) {
 		}
 	}
 	if token == "" {
-		reqDataPtr := droplet.CreateRequestData
+		reqDataPtr := droplet.GetDefaultDropCreateData()
 		reqDataPtr.Size = "1gb"
 		reqDataPtr.Region = reg
 		reqDataPtr.Names = []string{"master-1"}
