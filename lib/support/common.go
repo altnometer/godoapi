@@ -19,6 +19,15 @@ var ErrBadArgs = errors.New("no, not enough, or wrong args provided")
 // ErrUserSaysQuit used when user input signals stop exucting the program.
 var ErrUserSaysQuit = errors.New("user says stop execution")
 
+// ErrVolAttached used when vol shoul not be attached to a droplet.
+type ErrVolAttached struct {
+	msg string
+}
+
+func (e ErrVolAttached) Error() string {
+	return e.msg
+}
+
 // YellowSp colors str.
 var YellowSp = color.New(color.FgYellow).SprintFunc()
 
