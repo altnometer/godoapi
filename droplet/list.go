@@ -39,7 +39,7 @@ func ParseArgsListDrop(args []string) {
 
 }
 func listAllDroplets() {
-	fmt.Print("Sending request to DO api: ")
+	fmt.Println("Sending request to DO api: ")
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
 	opt := &godo.ListOptions{
@@ -74,7 +74,7 @@ func listAllDroplets() {
 
 // ReturnDropletsData returns a list of data for each listed droplet.
 func ReturnDropletsData() *[]map[string]string {
-	fmt.Print("Collecting listed droplets data: ")
+	fmt.Println("Collecting listed droplets data: ")
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
 	opt := &godo.ListOptions{
@@ -122,6 +122,23 @@ func ReturnDropletsData() *[]map[string]string {
 	// fmt.Printf("droplets = %+v\n", droplets)
 }
 
+// ReturnDroplets returns a list of data for each listed droplet.
+func ReturnDroplets() (volumes *[]godo.Droplet, err error) {
+	fmt.Println("Collecting listed droplets data: ")
+	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+	s.Start()
+	opt := &godo.ListOptions{
+		Page:    1,
+		PerPage: 200,
+	}
+	droplets, _, err := support.DOClient.Droplets.List(support.Ctx, opt)
+	s.Stop()
+	if err != nil {
+		return nil, err
+	}
+	return &droplets, nil
+}
+
 // ReturnDropletByID return droplet data identified by the provided id.
 func ReturnDropletByID(id int) map[string]string {
 	d, _, err := support.DOClient.Droplets.Get(support.Ctx, id)
@@ -147,7 +164,7 @@ func ReturnDropletByID(id int) map[string]string {
 
 // ReturnDropletsByTag return droplets identified by the provided tag.
 func ReturnDropletsByTag(tag string) *[]map[string]string {
-	fmt.Print("Collecting listed droplets data fetched by tag name: ")
+	fmt.Println("Collecting listed droplets data fetched by tag name: ")
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
 	opt := &godo.ListOptions{
