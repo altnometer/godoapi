@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
@@ -80,6 +79,7 @@ func ListAll() {
 			fmt.Printf("v.SizeGigaBytes = %+v\n", v.SizeGigaBytes)
 			fmt.Printf("v.Description   = %+v\n", v.Description)
 			fmt.Printf("v.DropletIDs    = %+v\n", v.DropletIDs)
+			fmt.Printf("v = %+v\n", v)
 			fmt.Println("************************************")
 		}
 	} else {
@@ -144,61 +144,75 @@ func DeleteAll() {
 }
 
 // Attach function attaches volume with volID to droplet with dropID.
-func Attach(vd *godo.VolumeCreateRequest, dropName string) error {
-	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
-	// func Attach(volID string, dropID int) {
+func Attach(
+	vd *godo.VolumeCreateRequest,
+	dropName string) (vol *godo.Volume, drop *godo.Droplet, err error) {
 	vols := *GetAllVols()
-	var (
-		volID  string
-		dropID int
-		err    error
-	)
 	for _, v := range vols {
 		if v.Name == vd.Name {
-			volID = v.ID
+			vol = &v
+			break
 		}
 	}
-	if volID == "" {
-		volume, err := Create(vd)
+	if vol == nil {
+		vol, err = Create(vd)
 		if err != nil {
-			return err
-		}
-
-		volID = volume.ID
-	}
-	droplets := *droplet.ReturnDropletsData()
-	for _, d := range droplets {
-		if d["Name"] == dropName {
-			dropID, err = strconv.Atoi(d["ID"])
-			if err != nil {
-				return err
-			}
+			return nil, nil, err
 		}
 	}
-	if dropID == 0 {
+	var droplets *[]godo.Droplet
+	if droplets, err = droplet.ReturnDroplets(); err != nil {
+		return nil, nil, err
+	}
+	for _, d := range *droplets {
+		if d.Name == dropName {
+			drop = &d
+		}
+	}
+	if drop == nil {
 		drCreateData := droplet.GetDefaultDropCreateData()
 		drCreateData.Names = []string{dropName}
 		drCreateData.Region = vd.Region
 		drCreateData.Tags = []string{"volume", vd.Name}
-		s.Start()
 		droplets := droplet.CreateDroplet(drCreateData)
 		if len(droplets) == 0 {
-			err := fmt.Errorf("failed to create droplet to attach volume to")
-			panic(err)
+			return nil, nil, fmt.Errorf("failed to create droplet to attach volume to")
 		}
-		dropID = droplets[0].ID
 		// give time for droplet to boot up.
+		fmt.Println("Waiting for created droplet to boot up...")
 		time.Sleep(10 * time.Second)
-		s.Stop()
+		drop = &droplets[0]
 	}
 	// func ReturnDropletsData() *[]map[string]string {
-	actionPtr, resPtr, err := support.DOClient.StorageActions.Attach(support.Ctx, volID, dropID)
+	if len(vol.DropletIDs) != 0 {
+		for _, di := range vol.DropletIDs {
+			if di == drop.ID {
+				return vol, drop, nil
+			}
+		}
+		err := support.ErrVolAttached{
+			Msg: fmt.Sprintf(
+				"volume %s is attached to different droplet(s) with id(s) %v",
+				vol.Name, vol.DropletIDs)}
+		return nil, nil, err
+	}
+
+	actionPtr, resPtr, err := support.DOClient.StorageActions.Attach(
+		support.Ctx, vol.ID, drop.ID)
+	if err != nil {
+		return nil, nil, err
+	}
 	if actionPtr != nil {
 		fmt.Printf("*actionPtr = %+v\n", *actionPtr)
 	}
 	fmt.Printf("resPtr = %+v\n", resPtr)
-	if err != nil {
-		return err
-	}
-	return nil
+	return vol, drop, nil
+}
+
+// Mount function mounts volume with vol ID to droplet with drop ID.
+func Mount(vd *godo.VolumeCreateRequest, dropName string) error {
+	vol, drop, err := Attach(vd, dropName)
+	fmt.Printf("vol = %+v\n", vol)
+	fmt.Printf("drop = %+v\n", drop)
+	return err
 }
