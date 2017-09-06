@@ -124,7 +124,7 @@ func ReturnDropletsData() *[]map[string]string {
 
 // ReturnDroplets returns a list of data for each listed droplet.
 func ReturnDroplets() (volumes *[]godo.Droplet, err error) {
-	fmt.Println("Collecting listed droplets data: ")
+	fmt.Println("Collecting listed droplets... ")
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
 	opt := &godo.ListOptions{
