@@ -130,7 +130,8 @@ func ParseArgsAttachVol(args []string) error {
 		Description:   *descPtr,
 		SizeGigaBytes: int64(*sizePtr),
 	}
-	return Attach(createVolData, *dropNamePtr)
+	_, _, err := Attach(createVolData, *dropNamePtr)
+	return err
 }
 
 // ParseArgsMountVol mounts specified by args volume to droplet with given name
