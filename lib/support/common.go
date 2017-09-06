@@ -21,11 +21,11 @@ var ErrUserSaysQuit = errors.New("user says stop execution")
 
 // ErrVolAttached used when vol shoul not be attached to a droplet.
 type ErrVolAttached struct {
-	msg string
+	Msg string
 }
 
 func (e ErrVolAttached) Error() string {
-	return e.msg
+	return e.Msg
 }
 
 // YellowSp colors str.
