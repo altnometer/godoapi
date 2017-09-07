@@ -222,7 +222,7 @@ func Mount(vd *godo.VolumeCreateRequest, dropName string) error {
 	ip, err := drop.PublicIPv4()
 	fmt.Printf("ip = %+v\n", ip)
 
-	volSysName := "scsi-0DO_Volume_" + vol.Name
+	volSysName := support.VolByIDPrefix + vol.Name
 	cmd := "if /sbin/sfdisk -d /dev/disk/by-id/" + volSysName + " 2>/dev/null ; then echo \"partitionen\"; else echo \"not partitioned\";fi"
 	fmt.Printf("cmd = %+v\n", cmd)
 	sshCmds := []string{cmd}
