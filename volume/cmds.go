@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
-	"github.com/altnometer/godoapi/k8s/setupk8s"
 	"github.com/altnometer/godoapi/lib/support"
 	"github.com/briandowns/spinner"
 	"github.com/digitalocean/godo"
@@ -228,7 +227,7 @@ func Mount(vd *godo.VolumeCreateRequest, dropName string) error {
 	fmt.Printf("cmd = %+v\n", cmd)
 	sshCmds := []string{cmd}
 	sshKeyPath := support.GetSSHKeyPath()
-	sshOutput := setupk8s.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
+	sshOutput := support.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
 	fmt.Printf("sshOutput = %+v\n", sshOutput)
 	// sudo parted /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01 mklabel gpt
 

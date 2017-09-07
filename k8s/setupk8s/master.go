@@ -41,7 +41,7 @@ func SetUpMaster(env, reg string) (string, string) {
 	for _, d := range runningMasters {
 		if d["Name"] == master1Name {
 			PublicIP = d["PublicIP"]
-			token = FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
+			token = support.FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
 			support.YellowLn("Set env var for k8s token.")
 			os.Setenv("K8SToken", token)
 			support.RedPf("Droplet with %s name already exist!", master1Name)
@@ -101,7 +101,7 @@ func SetUpMaster(env, reg string) (string, string) {
 	if err != nil {
 		panic(err)
 	}
-	token = FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
+	token = support.FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
 	support.YellowLn("Set env var for k8s token.")
 	os.Setenv("K8SToken", token)
 	return PublicIP, token
@@ -157,33 +157,4 @@ func execSSH(userName, IP, sshKeyPath string) {
 	// 	fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
 	// 	os.Exit(1)
 	// }
-}
-
-// FetchSSHOutput executes ssh cmd and returns cmd output.
-func FetchSSHOutput(userName, IP, sshKeyPath string, sshCmds []string) string {
-	cmdArgs := append(
-		[]string{
-			"-o",
-			"UserKnownHostsFile=/dev/null",
-			"-o",
-			"StrictHostKeyChecking=no",
-			"-i",
-			sshKeyPath,
-			fmt.Sprintf("%s@%s", userName, IP),
-		},
-		sshCmds...,
-	)
-	// str := strings.Join(cmdArgs[:], " ")
-	// fmt.Printf("str = %+v\n", str)
-	// os.Exit(0)
-	var (
-		cmdOut []byte
-		err    error
-	)
-	cmdName := "ssh"
-	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
-		support.RedLn("There was an error running ssh command: ", err)
-		os.Exit(1)
-	}
-	return string(cmdOut)
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/digitalocean/godo"
@@ -125,4 +126,33 @@ func GetSSHKeyPath() string {
 		sshKeyPath = GetUserInput("Type in a DOSSHKeyPath: ")
 	}
 	return sshKeyPath
+}
+
+// FetchSSHOutput executes ssh cmd and returns cmd output.
+func FetchSSHOutput(userName, IP, sshKeyPath string, sshCmds []string) string {
+	cmdArgs := append(
+		[]string{
+			"-o",
+			"UserKnownHostsFile=/dev/null",
+			"-o",
+			"StrictHostKeyChecking=no",
+			"-i",
+			sshKeyPath,
+			fmt.Sprintf("%s@%s", userName, IP),
+		},
+		sshCmds...,
+	)
+	// str := strings.Join(cmdArgs[:], " ")
+	// fmt.Printf("str = %+v\n", str)
+	// os.Exit(0)
+	var (
+		cmdOut []byte
+		err    error
+	)
+	cmdName := "ssh"
+	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
+		RedLn("There was an error running ssh command: ", err)
+		os.Exit(1)
+	}
+	return string(cmdOut)
 }
