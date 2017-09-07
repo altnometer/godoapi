@@ -12,6 +12,10 @@ import (
 	"github.com/fatih/color"
 )
 
+/////////////////////////////consts///////////////////////////////////////////
+// VolByIDPrefix holds prefix for vol link names in /dev/disk/by-id dir.
+const VolByIDPrefix string = "scsi-0DO_Volume_"
+
 /////////////////////////////errors///////////////////////////////////////////
 
 // ErrBadArgs used when no, or not all args provided.
