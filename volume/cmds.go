@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
+	"github.com/altnometer/godoapi/k8s/setupk8s"
 	"github.com/altnometer/godoapi/lib/support"
 	"github.com/briandowns/spinner"
 	"github.com/digitalocean/godo"
@@ -90,6 +91,7 @@ func ListAll() {
 
 // GetAllVols gets all volumes.
 func GetAllVols() *[]godo.Volume {
+	fmt.Println("Fetching existing volumes...")
 	// ListVolumeParams stores the options you can set for a ListVolumeCall
 	// type ListVolumeParams struct {
 	// 	Region      string       `json:"region"`
@@ -160,11 +162,11 @@ func Attach(
 			return nil, nil, err
 		}
 	}
-	var droplets *[]godo.Droplet
+	var droplets []godo.Droplet
 	if droplets, err = droplet.ReturnDroplets(); err != nil {
 		return nil, nil, err
 	}
-	for _, d := range *droplets {
+	for _, d := range droplets {
 		if d.Name == dropName {
 			drop = &d
 		}
@@ -212,7 +214,29 @@ func Attach(
 // Mount function mounts volume with vol ID to droplet with drop ID.
 func Mount(vd *godo.VolumeCreateRequest, dropName string) error {
 	vol, drop, err := Attach(vd, dropName)
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("vol = %+v\n", vol)
-	fmt.Printf("drop = %+v\n", drop)
+	fmt.Printf("drop.Networks.V4 = %+v\n", drop.Networks.V4)
+	ip, err := drop.PublicIPv4()
+	fmt.Printf("ip = %+v\n", ip)
+
+	volSysName := "scsi-0DO_Volume_" + vol.Name
+	cmd := "if /sbin/sfdisk -d /dev/disk/by-id/" + volSysName + " 2>/dev/null ; then echo \"partitionen\"; else echo \"not partitioned\";fi"
+	fmt.Printf("cmd = %+v\n", cmd)
+	sshCmds := []string{cmd}
+	sshKeyPath := support.GetSSHKeyPath()
+	sshOutput := setupk8s.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
+	fmt.Printf("sshOutput = %+v\n", sshOutput)
+	// sudo parted /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01 mklabel gpt
+
 	return err
+	// partitions: -part1, part2 etc
+	// Partition the volume
+	// Format the partitions
+	// Create mount points
+	// Mount the filesystems
+	// Adjust the /etc/fstab
 }
