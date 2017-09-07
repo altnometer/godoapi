@@ -116,3 +116,13 @@ func GetUserInput(promt string) string {
 	}
 	return strings.Replace(text, "\n", "", -1)
 }
+
+// GetSSHKeyPath returns user provided path to ssh keys.
+func GetSSHKeyPath() string {
+	sshKeyPath := os.Getenv("DOSSHKeyPath")
+	if sshKeyPath == "" {
+		YellowLn("You can set env var DOSSHKeyPath!")
+		sshKeyPath = GetUserInput("Type in a DOSSHKeyPath: ")
+	}
+	return sshKeyPath
+}
