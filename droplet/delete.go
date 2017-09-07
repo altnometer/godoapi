@@ -42,24 +42,20 @@ func ParseArgsDeleteDrop(args []string) error {
 	return nil
 }
 func deleteAllDroplets() error {
-	attVolIDs := getDropIDsWithVols()
-	// fmt.Printf("attVolIDs = %+v\n", attVolIDs)
-	var dropsWithVols []godo.Droplet
+	volsByDropIds := getAttVolsByDropIds()
+	// fmt.Printf("volsByDropIds = %+v\n", volsByDropIds)
 	droplets, err := ReturnDroplets()
 	if err != nil {
 		return err
 	}
 	for i, d := range droplets {
-		for _, id := range attVolIDs {
+		for id, v := range volsByDropIds {
 			if id == d.ID {
-				dropsWithVols = append(dropsWithVols, d)
+				if err := deleteDropWithAttVols(d, v); err != nil {
+					return err
+				}
 				droplets = append(droplets[:i], droplets[i+1:]...)
 			}
-		}
-	}
-	for _, d := range dropsWithVols {
-		if err := deleteDropWithAttachedVols(d); err != nil {
-			return err
 		}
 	}
 	for _, dData := range droplets {
@@ -88,7 +84,8 @@ func deleteAllDroplets() error {
 	return nil
 }
 
-func getDropIDsWithVols() []int {
+func getAttVolsByDropIds() (volsByDropIds map[int]godo.Volume) {
+	volsByDropIds = make(map[int]godo.Volume)
 	fmt.Println("Fetching attached volumes...")
 	opt := &godo.ListOptions{
 		Page:    1,
@@ -101,16 +98,38 @@ func getDropIDsWithVols() []int {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var vIDs []int
 	for _, v := range volumes {
 		if len(v.DropletIDs) != 0 {
-			vIDs = append(vIDs, v.DropletIDs...)
+			for _, id := range v.DropletIDs {
+				volsByDropIds[id] = v
+			}
 		}
 	}
-	return vIDs
+	return volsByDropIds
 }
 
-func deleteDropWithAttachedVols(d godo.Droplet) error {
-	fmt.Printf("d = %+v\n", d)
+func deleteDropWithAttVols(d godo.Droplet, v godo.Volume) error {
+	// fmt.Printf("d = %+v\n", d)
+	var (
+		ip  string
+		err error
+	)
+	if ip, err = d.PublicIPv4(); err != nil {
+		return err
+	}
+	sshKeyPath := support.GetSSHKeyPath()
+
+	diskByIDName := support.VolByIDPrefix + v.Name
+	mntPoint := "/mnt/" + diskByIDName
+	pathDisk := "/dev/disk/by-id/" + diskByIDName
+	// lsof | grep mntPoint
+	// would not detect NFS exported
+	// showmount -e remote_nfs_server
+	cmdUmount := fmt.Sprintf("if [ $(mount | grep %s --count) -ge 1 ];", mntPoint) +
+		fmt.Sprintf("then  sudo umount %[1]s && echo 'unmounted %[1]s';", pathDisk) +
+		fmt.Sprintf("else echo '%s is not mounted.'; fi", pathDisk)
+	sshCmds := []string{cmdUmount}
+	res := support.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
+	fmt.Printf("res = %+v\n", res)
 	return nil
 }
