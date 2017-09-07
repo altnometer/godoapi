@@ -2,6 +2,7 @@ package droplet
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/altnometer/godoapi/lib/support"
@@ -22,7 +23,10 @@ func ParseArgs(args []string) {
 	case "create":
 		ParseArgsCreateDrop(args[1:])
 	case "delete":
-		ParseArgsDeleteDrop(args[1:])
+		if err := ParseArgsDeleteDrop(args[1:]); err != nil {
+			log.Println(err)
+		}
+
 	default:
 		fmt.Print("Incorrect arg: ")
 		support.RedBold.Println(args[0])
