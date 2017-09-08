@@ -13,6 +13,7 @@ import (
 )
 
 /////////////////////////////consts///////////////////////////////////////////
+
 // VolByIDPrefix holds prefix for vol link names in /dev/disk/by-id dir.
 const VolByIDPrefix string = "scsi-0DO_Volume_"
 
@@ -159,4 +160,58 @@ func FetchSSHOutput(userName, IP, sshKeyPath string, sshCmds []string) string {
 		os.Exit(1)
 	}
 	return string(cmdOut)
+}
+
+// ExecSSH execute ssh command interactively.
+func ExecSSH(userName, IP string, cmds []string) {
+	// sshCommander := SSHCommander{userName, IP, sshKeyPath}
+	// sshOpt := fmt.Sprintf("-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i %s", sshKeyPath)
+	sshKeyPath := GetSSHKeyPath()
+	// cmds := []string{
+	// 	"apt-get upgrade",
+	// }
+	arg := append(
+		[]string{
+			"-o",
+			"UserKnownHostsFile=/dev/null",
+			"-o",
+			"StrictHostKeyChecking=no",
+			"-i",
+			sshKeyPath,
+			fmt.Sprintf("%s@%s", userName, IP),
+		},
+		cmds...,
+	)
+
+	// cmdOut, err := exec.Command("ssh", arg...).Output()
+	cmd := exec.Command("ssh", arg...)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+	// cmdReader, err := cmd.StdoutPipe()
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd", err)
+	// 	os.Exit(1)
+	// }
+	// scanner := bufio.NewScanner(cmdReader)
+	// go func() {
+	// 	for scanner.Scan() {
+	// 		fmt.Printf("ssh output | %s\n", scanner.Text())
+	// 	}
+	// }()
+	// err = cmd.Start()
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
+	// 	os.Exit(1)
+	// }
+
+	// err = cmd.Wait()
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
+	// 	os.Exit(1)
+	// }
 }
