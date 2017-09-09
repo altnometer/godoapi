@@ -118,7 +118,7 @@ func deleteDropWithAttVols(d godo.Droplet, v godo.Volume) error {
 		return err
 	}
 	diskByIDName := support.VolByIDPrefix + v.Name
-	partName := diskByIDName + "-part1"
+	// partName := diskByIDName + "-part1"
 	pathDiskDir := "/dev/disk/by-id/"
 	pathDiskByID := pathDiskDir + diskByIDName
 	// pathPartition := pathDiskDir + partName
