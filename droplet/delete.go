@@ -60,11 +60,11 @@ func deleteAllDroplets() error {
 	}
 	for _, dData := range droplets {
 		dID := dData.ID
-		reader := bufio.NewReader(os.Stdin)
 		fmt.Println("Delete droplet?[y/N]")
 		fmt.Printf("  Name  %v\n", support.YellowSp(dData.Name))
 		fmt.Printf("  ID    %+v\n", dID)
 		fmt.Printf("  tag   %+v\n", dData.Tags)
+		reader := bufio.NewReader(os.Stdin)
 		char, _, err := reader.ReadRune()
 		if err != nil {
 			panic(err)
@@ -117,19 +117,48 @@ func deleteDropWithAttVols(d godo.Droplet, v godo.Volume) error {
 	if ip, err = d.PublicIPv4(); err != nil {
 		return err
 	}
-	sshKeyPath := support.GetSSHKeyPath()
-
 	diskByIDName := support.VolByIDPrefix + v.Name
-	mntPoint := "/mnt/" + diskByIDName
-	pathDisk := "/dev/disk/by-id/" + diskByIDName
+	partName := diskByIDName + "-part1"
+	pathDiskDir := "/dev/disk/by-id/"
+	pathDiskByID := pathDiskDir + diskByIDName
+	// pathPartition := pathDiskDir + partName
+	mntPoint := "/mnt/" + v.Name
 	// lsof | grep mntPoint
 	// would not detect NFS exported
 	// showmount -e remote_nfs_server
-	cmdUmount := fmt.Sprintf("if [ $(mount | grep %s --count) -ge 1 ];", mntPoint) +
-		fmt.Sprintf("then  sudo umount %[1]s && echo 'unmounted %[1]s';", pathDisk) +
-		fmt.Sprintf("else echo '%s is not mounted.'; fi", pathDisk)
+	cmdUmount := fmt.Sprintf("if [ $(mount | grep %s --count) -ge 1 ]; then ", mntPoint) +
+		fmt.Sprintf(
+			"for i in $(lsof +f -- %s | awk 'NR>1 { print $2 }'); do ", mntPoint) +
+		"echo \"kill process $i\" && kill $i; done && " +
+		fmt.Sprintf("umount %[1]s && echo -e '\\e[32m unmounted %[1]s \\e[00m';", mntPoint) +
+		fmt.Sprintf("else echo -e '\\e[33m %s is not mounted. \\e[00m'; fi", pathDiskByID)
 	sshCmds := []string{cmdUmount}
-	res := support.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
+	support.ExecSSH("root", ip, sshCmds)
+	promtMsg := fmt.Sprintf("Confirm %s is not mounted", pathDiskByID)
+	confirmed, err := support.UserConfirmDefaultN(promtMsg)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		return fmt.Errorf("User did not confirm unmouning of %s", pathDiskByID)
+	}
+	action, _, err := support.DOClient.StorageActions.DetachByDropletID(support.Ctx, v.ID, d.ID)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("action = %+v\n", action)
+	fmt.Println("Sleep until the volume is detached.")
+	time.Sleep(3 * time.Second)
+	promtMsg = fmt.Sprintf("Delete droplet %s?\n  ID %v\n  tag %v\n",
+		support.YellowSp(d.Name), d.ID, d.Tags)
+	confirmed, err = support.UserConfirmDefaultN(promtMsg)
+	if !confirmed {
+		return fmt.Errorf("User did not confirm unmouning of %s", pathDiskByID)
+	}
+	res, err := support.DOClient.Droplets.Delete(support.Ctx, d.ID)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("res = %+v\n", res)
 	return nil
 }
