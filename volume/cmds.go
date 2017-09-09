@@ -198,6 +198,7 @@ func Attach(
 		return nil, nil, err
 	}
 
+	fmt.Println("Attaching volume to droplet...")
 	actionPtr, resPtr, err := support.DOClient.StorageActions.Attach(
 		support.Ctx, vol.ID, drop.ID)
 	if err != nil {
@@ -207,6 +208,8 @@ func Attach(
 		fmt.Printf("*actionPtr = %+v\n", *actionPtr)
 	}
 	fmt.Printf("resPtr = %+v\n", resPtr)
+	fmt.Println("Waiting for the action to progress...")
+	time.Sleep(5 * time.Second)
 	return vol, drop, nil
 }
 
