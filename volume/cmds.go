@@ -210,25 +210,55 @@ func Attach(
 	return vol, drop, nil
 }
 
-// Mount function mounts volume with vol ID to droplet with drop ID.
+// Mount function mounts volume with volume ID to droplet with drop ID.
 func Mount(vd *godo.VolumeCreateRequest, dropName string) error {
-	vol, drop, err := Attach(vd, dropName)
+	v, d, err := Attach(vd, dropName)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("vol = %+v\n", vol)
-	fmt.Printf("drop.Networks.V4 = %+v\n", drop.Networks.V4)
-	ip, err := drop.PublicIPv4()
+	fmt.Printf("v = %+v\n", v)
+	ip, err := d.PublicIPv4()
 	fmt.Printf("ip = %+v\n", ip)
 
-	volSysName := support.VolByIDPrefix + vol.Name
-	cmd := "if /sbin/sfdisk -d /dev/disk/by-id/" + volSysName + " 2>/dev/null ; then echo \"partitionen\"; else echo \"not partitioned\";fi"
-	fmt.Printf("cmd = %+v\n", cmd)
+	diskByIDName := support.VolByIDPrefix + v.Name
+	partName := diskByIDName + "-part1"
+	pathDiskDir := "/dev/disk/by-id/"
+	pathDiskByID := pathDiskDir + diskByIDName
+	pathPartition := pathDiskDir + partName
+	mntPoint := "/mnt/" + v.Name
+	// fmt.Sprintf("echo 'partition %s exist'; else ", pathPartition) +
+	// fmt.Sprintf("echo 'partition %s does not exist'; fi && ", pathPartition)
+	cmd := fmt.Sprintf("bash -c \"if [ ! -h %s ]; then ", pathPartition) +
+		fmt.Sprintf("echo -e '\\e[31m formating disk... \\e[00m' && ") +
+		fmt.Sprintf("parted -s %s mklabel gpt && sleep 1 && ", pathDiskByID) +
+		fmt.Sprintf("parted -a opt %s mkpart primary 0%% 100%% && sleep 1 && ", pathDiskByID) +
+		fmt.Sprintf("mkfs.ext4 -F -E lazy_itable_init=0,lazy_journal_init=0,discard %s ;fi && ", pathPartition) +
+		// fmt.Sprintf("mkfs.ext4 %s ;fi && ", pathPartition) +
+		fmt.Sprintf("mkdir -p %s && ", mntPoint) +
+		fmt.Sprintf("mount -o discard,defaults %s %s && sleep 1 && ", pathPartition, mntPoint) +
+		fmt.Sprintf("sudo chmod a+w %s && ", mntPoint) +
+		fmt.Sprintf(
+			"echo '%s %s ext4 defaults,nofail,discard 0 2' | sudo tee -a /etc/fstab \" ",
+			pathPartition, mntPoint)
+	// "mount -a\""
+
+	// cmd := fmt.Sprintf("\"if /sbin/sfdisk -d %s 2>/dev/null ; then ", pathDiskByID) +
+	// 	fmt.Sprintf("echo 'volume %s already partitioned'; else ", v.Name) +
+	// 	fmt.Sprintf("sudo parted %s mklabel gpt && ", pathDiskByID) +
+	// 	fmt.Sprintf("sudo parted -a opt %s mkpart primary 0%% 100%% && ", pathDiskByID) +
+	// 	fmt.Sprintf("sudo mkfs.ext4 %s ;fi && ", pathDiskByID) +
+	// 	fmt.Sprintf("sudo mkdir -p %s && ", mntPoint) +
+	// 	fmt.Sprintf(
+	// 		"echo '%s %s ext4 defaults,nofail,discard 0 2' | sudo tee -a /etc/fstab && ",
+	// 		pathPartition, mntPoint) +
+	// 	"sudo mount -a\""
+
 	sshCmds := []string{cmd}
-	sshKeyPath := support.GetSSHKeyPath()
-	sshOutput := support.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
-	fmt.Printf("sshOutput = %+v\n", sshOutput)
+	// fmt.Sprintf("sudo mount -o defaults,discard %s %s",
+	// 	pathPartition, mntPoint),
+	// sshOutput := support.FetchSSHOutput("root", ip, sshKeyPath, sshCmds)
+	support.ExecSSH("root", ip, sshCmds)
+	// fmt.Printf("sshOutput = %+v\n", sshOutput)
 	// sudo parted /dev/disk/by-id/scsi-0DO_Volume_volume-nyc1-01 mklabel gpt
 
 	return err
