@@ -123,6 +123,24 @@ func GetUserInput(promt string) string {
 	return strings.Replace(text, "\n", "", -1)
 }
 
+// UserConfirmDefaultN return false for any input but 'y|Y'
+func UserConfirmDefaultN(prompt string) (conf bool, err error) {
+	fmt.Println(prompt)
+	fmt.Println("[y/N]")
+	reader := bufio.NewReader(os.Stdin)
+	char, _, err := reader.ReadRune()
+	if err != nil {
+		return false, err
+	}
+	if char == 10 {
+		return false, nil
+	}
+	if char != 'y' && char != 'Y' {
+		return false, nil
+	}
+	return true, nil
+}
+
 // GetSSHKeyPath returns user provided path to ssh keys.
 func GetSSHKeyPath() string {
 	sshKeyPath := os.Getenv("DOSSHKeyPath")
