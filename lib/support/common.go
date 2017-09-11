@@ -43,13 +43,16 @@ var YellowLn = color.New(color.FgYellow).PrintlnFunc()
 // YellowPf color output with interpolation.
 var YellowPf = color.New(color.FgYellow).PrintfFunc()
 
-// GreenLn colors a line red.
+// GreenLn colors a line.
 var GreenLn = color.New(color.FgGreen).PrintlnFunc()
+
+// RedSp colors str.
+var RedSp = color.New(color.FgRed).SprintFunc()
 
 // RedPf output with interpolation colored red.
 var RedPf = color.New(color.FgRed).PrintfFunc()
 
-// RedLn colors a line red.
+// RedLn colors a line.
 var RedLn = color.New(color.FgRed).PrintlnFunc()
 
 // RedBold colors the output.
