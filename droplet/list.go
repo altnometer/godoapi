@@ -54,10 +54,16 @@ func listAllDroplets() {
 	}
 	if len(droplets) > 0 {
 		for _, d := range droplets {
+			ip, err := d.PublicIPv4()
+			if err != nil {
+				support.RedLn(err)
+			}
 			fmt.Printf("d.Name                %+v\n", d.Name)
 			fmt.Printf("d.ID                  %+v\n", d.ID)
+			fmt.Printf("d.Tags                %+v\n", d.Tags)
 			// fmt.Printf("d.Size = %+v\n", d.Size)
-			fmt.Printf("d.Networks.V4 = %+v\n", d.Networks.V4)
+			// fmt.Printf("d.Networks.V4 = %+v\n", d.Networks.V4)
+			fmt.Printf("ip                    %+v\n", ip)
 			fmt.Printf("d.Size.Slug           %+v\n", d.Size.Slug)
 			fmt.Printf("d.Size.Memory         %+v\n", d.Size.Memory)
 			fmt.Printf("d.Size.Vcpus          %+v\n", d.Size.Vcpus)
