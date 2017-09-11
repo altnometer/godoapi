@@ -54,6 +54,13 @@ func ParseArgsCreateDrop(args []string) {
 		subCmd.PrintDefaults()
 		os.Exit(1)
 	}
+	if subCmd.Parsed() {
+		if len(multiName) == 0 {
+			support.RedLn("No name(s) provided.")
+			subCmd.PrintDefaults()
+			os.Exit(1)
+		}
+	}
 	var sizeIsValid bool
 	for _, size := range support.DropletSizes {
 		if *sizePtr == size {
