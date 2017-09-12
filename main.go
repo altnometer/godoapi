@@ -6,14 +6,17 @@ import (
 	"log"
 	"os"
 
+	"github.com/altnometer/godoapi/admin"
 	"github.com/altnometer/godoapi/droplet"
 	"github.com/altnometer/godoapi/k8s/setupk8s"
 	"github.com/altnometer/godoapi/lib/support"
 	"github.com/altnometer/godoapi/volume"
 )
 
-var argEntryFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
-	support.YellowSp("droplet"), support.YellowSp("volume"), support.YellowSp("setupk8s"))
+var argEntryFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s> subcommand, please.",
+	support.YellowSp("droplet"), support.YellowSp("volume"),
+	support.YellowSp("setupk8s"),
+	support.YellowSp("admin"))
 
 func main() {
 	if len(os.Args) < 2 {
@@ -29,6 +32,8 @@ func main() {
 		volume.ParseArgs(os.Args[2:])
 	case "setupk8s":
 		setupk8s.ParseArgs(os.Args[2:])
+	case "admin":
+		admin.ParseArgs(os.Args[2:])
 	default:
 		fmt.Println(argEntryFailMsg)
 		// fmt.Println("")
