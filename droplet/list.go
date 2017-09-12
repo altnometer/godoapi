@@ -1,6 +1,7 @@
 package droplet
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"strconv"
@@ -169,7 +170,7 @@ func ReturnDropletByID(id int) map[string]string {
 }
 
 // ReturnDropletsByTag return droplets identified by the provided tag.
-func ReturnDropletsByTag(tag string) *[]map[string]string {
+func ReturnDropletsByTag(tag string) (*[]map[string]string, error) {
 	fmt.Println("Collecting listed droplets data fetched by tag name: ")
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
@@ -181,7 +182,7 @@ func ReturnDropletsByTag(tag string) *[]map[string]string {
 	s.Stop()
 	fmt.Println("")
 	if err != nil {
-		panic("support.DOclient.Droplets.ListByTag() failed.")
+		return nil, errors.New("support.DOclient.Droplets.ListByTag() failed")
 	}
 	dropletsData := make([]map[string]string, support.MaxDroplets)
 	if len(droplets) > 0 {
@@ -204,5 +205,5 @@ func ReturnDropletsByTag(tag string) *[]map[string]string {
 	} else {
 		support.GreenLn("No droplets exist.")
 	}
-	return &dropletsData
+	return &dropletsData, nil
 }

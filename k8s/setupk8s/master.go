@@ -2,6 +2,7 @@ package setupk8s
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -35,10 +36,13 @@ func SetUpMaster(env, reg string) (string, string) {
 		"'NR == 2 { printf $1 }'",
 	}
 	master1Name := "master-1"
-	runningMasters := *droplet.ReturnDropletsByTag("master")
+	runningMasters, err := droplet.ReturnDropletsByTag("master")
+	if err != nil {
+		log.Fatal(err)
+	}
 	var token string
 	var PublicIP string
-	for _, d := range runningMasters {
+	for _, d := range *runningMasters {
 		if d["Name"] == master1Name {
 			PublicIP = d["PublicIP"]
 			token = support.FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
@@ -97,7 +101,7 @@ func SetUpMaster(env, reg string) (string, string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		panic(err)
 	}
