@@ -41,15 +41,18 @@ func SetUpMaster(env, reg string) (string, string) {
 		log.Fatal(err)
 	}
 	var token string
-	var PublicIP string
-	for _, d := range *runningMasters {
-		if d["Name"] == master1Name {
-			PublicIP = d["PublicIP"]
-			token = support.FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
+	var publicIP string
+	for _, d := range runningMasters {
+		if d.Name == master1Name {
+			publicIP, err := d.PublicIPv4()
+			if err != nil {
+				log.Fatal(err)
+			}
+			token = support.FetchSSHOutput("root", publicIP, sshKeyPath, sshCmdGetToken)
 			support.YellowLn("Set env var for k8s token.")
 			os.Setenv("K8SToken", token)
 			support.RedPf("Droplet with %s name already exist!", master1Name)
-			// return d["PublicIP"], token
+			// return d["publicIP"], token
 		}
 	}
 	if token == "" {
@@ -70,21 +73,21 @@ func SetUpMaster(env, reg string) (string, string) {
 				support.RedLn("Only SINGLE master is handled currently!!!")
 				dData := droplet.ReturnDropletByID(d.ID)
 				s.Start()
-				PublicIP = dData["PublicIP"]
+				publicIP = dData["PublicIP"]
 				s.Stop()
 				break
 			}
 		}
 	}
-	if PublicIP == "" {
-		panic("No PublicIP for k8s master host, cannot continue!")
+	if publicIP == "" {
+		panic("No publicIP for k8s master host, cannot continue!")
 	}
-	// execSSH(userName, PublicIP, sshKeyPath)
+	// execSSH(userName, publicIP, sshKeyPath)
 	// bash master.sh --TARGET_MACHINE_IP 165.227.134.109 --PATH_TO_SSH_PRIV_KEYS ~/.ssh/circleci --USERNAME sally --USER_PASSWORD las
 	arg := []string{
 		"/home/sam/redmoo/devops/k8s/setupcluster/docean/master.sh",
 		"--TARGET_MACHINE_IP",
-		PublicIP,
+		publicIP,
 		"--PATH_TO_SSH_PRIV_KEYS",
 		sshKeyPath,
 		"--USERNAME",
@@ -105,8 +108,8 @@ func SetUpMaster(env, reg string) (string, string) {
 	if err != nil {
 		panic(err)
 	}
-	token = support.FetchSSHOutput("root", PublicIP, sshKeyPath, sshCmdGetToken)
+	token = support.FetchSSHOutput("root", publicIP, sshKeyPath, sshCmdGetToken)
 	support.YellowLn("Set env var for k8s token.")
 	os.Setenv("K8SToken", token)
-	return PublicIP, token
+	return publicIP, token
 }
