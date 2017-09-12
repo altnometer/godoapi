@@ -38,7 +38,7 @@ type CreatedDrpSpecs struct {
 }
 
 // ParseArgsCreateDrop handles os.Args and calls relevant functions in the package.
-func ParseArgsCreateDrop(args []string) {
+func ParseArgsCreateDrop(args []string) error {
 	// client := support.GetDOClient()
 	subCmd := flag.NewFlagSet("create", flag.ExitOnError)
 	var multiName support.NameList
@@ -77,7 +77,10 @@ func ParseArgsCreateDrop(args []string) {
 	// 		os.Exit(1)
 	// 	}
 	// }
-	support.ValidateRegions(regPtr)
+	if err := support.ValidateRegions(regPtr); err != nil {
+		return err
+
+	}
 	createDropData := GetDefaultDropCreateData()
 	createDropData.Size = *sizePtr
 	createDropData.Region = *regPtr
@@ -91,7 +94,7 @@ func ParseArgsCreateDrop(args []string) {
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
 	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
 	CreateDroplet(createDropData)
-
+	return nil
 }
 
 // CreateDroplet creates a droplet with provided specs.

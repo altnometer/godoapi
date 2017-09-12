@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/altnometer/godoapi/droplet"
@@ -21,7 +22,9 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "droplet":
-		droplet.ParseArgs(os.Args[2:])
+		if err := droplet.ParseArgs(os.Args[2:]); err != nil {
+			log.Fatal(support.RedSp(err))
+		}
 	case "volume":
 		volume.ParseArgs(os.Args[2:])
 	case "setupk8s":

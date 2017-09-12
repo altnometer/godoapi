@@ -2,7 +2,6 @@ package droplet
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/altnometer/godoapi/lib/support"
@@ -12,7 +11,7 @@ var argDropletFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
 	support.YellowSp("list"), support.YellowSp("create"), support.YellowSp("delete"))
 
 // ParseArgs handles os.Args and calls relevant functions in the package.
-func ParseArgs(args []string) {
+func ParseArgs(args []string) error {
 	if len(args) < 1 {
 		fmt.Println(argDropletFailMsg)
 		os.Exit(1)
@@ -21,10 +20,12 @@ func ParseArgs(args []string) {
 	case "list":
 		ParseArgsListDrop(args[1:])
 	case "create":
-		ParseArgsCreateDrop(args[1:])
+		if err := ParseArgsCreateDrop(args[1:]); err != nil {
+			return err
+		}
 	case "delete":
 		if err := ParseArgsDeleteDrop(args[1:]); err != nil {
-			log.Println(err)
+			return err
 		}
 
 	default:
@@ -33,4 +34,5 @@ func ParseArgs(args []string) {
 		fmt.Println(argDropletFailMsg)
 		os.Exit(1)
 	}
+	return nil
 }
