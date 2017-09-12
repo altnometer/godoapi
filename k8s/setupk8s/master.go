@@ -106,5 +106,3 @@ func SetUpMaster(env, reg string) (string, string) {
 	os.Setenv("K8SToken", token)
 	return PublicIP, token
 }
-
-
