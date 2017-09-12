@@ -53,30 +53,7 @@ func listAllDroplets() {
 	if err != nil {
 		panic("support.DOclient.Droplets.List() failed.")
 	}
-	if len(droplets) > 0 {
-		for _, d := range droplets {
-			ip, err := d.PublicIPv4()
-			if err != nil {
-				support.RedLn(err)
-			}
-			fmt.Printf("d.Name                %+v\n", d.Name)
-			fmt.Printf("d.ID                  %+v\n", d.ID)
-			fmt.Printf("d.Tags                %+v\n", d.Tags)
-			// fmt.Printf("d.Size = %+v\n", d.Size)
-			// fmt.Printf("d.Networks.V4 = %+v\n", d.Networks.V4)
-			fmt.Printf("ip                    %+v\n", ip)
-			fmt.Printf("d.Size.Slug           %+v\n", d.Size.Slug)
-			fmt.Printf("d.Size.Memory         %+v\n", d.Size.Memory)
-			fmt.Printf("d.Size.Vcpus          %+v\n", d.Size.Vcpus)
-			fmt.Printf("d.Size.Disk           %+v\n", d.Size.Disk)
-			fmt.Printf("d.Size.PriceMonthly   %+v\n", d.Size.PriceMonthly)
-			// fmt.Printf("d = %+v\n", d)
-			fmt.Println("***************************")
-		}
-	} else {
-		support.GreenLn("No droplets exist.")
-	}
-	// fmt.Printf("droplets = %+v\n", droplets)
+	support.PrintDropData(droplets)
 }
 
 // ReturnDropletsData returns a list of data for each listed droplet.
