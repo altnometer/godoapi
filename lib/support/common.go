@@ -49,6 +49,9 @@ var GreenLn = color.New(color.FgGreen).PrintlnFunc()
 // RedSp colors str.
 var RedSp = color.New(color.FgRed).SprintFunc()
 
+// RedSf color string with interpolation. RedSf("color is %s", myColor)
+var RedSf = color.New(color.FgRed).SprintfFunc()
+
 // RedPf output with interpolation colored red.
 var RedPf = color.New(color.FgRed).PrintfFunc()
 
@@ -169,6 +172,21 @@ func PrintDropData(droplets []godo.Droplet) {
 	} else {
 		GreenLn("No droplets exist.")
 	}
+}
+
+// ValidateMemSize return true for a valid droplet memory size.
+func ValidateMemSize(memSize string) (bool, error) {
+	var sizeIsValid bool
+	for _, size := range DropletSizes {
+		if memSize == size {
+			return true, nil
+		}
+	}
+	if sizeIsValid == false {
+		errMsg := RedSf("Valid -size values %+v\n", DropletSizes)
+		return false, errors.New(errMsg)
+	}
+	return true, nil
 }
 
 /////////////////////SSH functions/////////////////////////////////////////////

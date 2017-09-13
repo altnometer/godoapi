@@ -61,15 +61,9 @@ func ParseArgsCreateDrop(args []string) error {
 			os.Exit(1)
 		}
 	}
-	var sizeIsValid bool
-	for _, size := range support.DropletSizes {
-		if *sizePtr == size {
-			sizeIsValid = true
-			break
-		}
-	}
-	if sizeIsValid == false {
-		support.Red.Printf("Valid -size values %+v\n", support.DropletSizes)
+	sizeIsValid, err := support.ValidateMemSize(*sizePtr)
+	if !sizeIsValid {
+		return err
 	}
 	// if subCmd.Parsed() {
 	// 	if (&multiName).String() == "[]" {
