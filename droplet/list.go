@@ -124,26 +124,13 @@ func ReturnDroplets() (volumes []godo.Droplet, err error) {
 }
 
 // ReturnDropletByID return droplet data identified by the provided id.
-func ReturnDropletByID(id int) map[string]string {
+func ReturnDropletByID(id int) godo.Droplet {
 	d, _, err := support.DOClient.Droplets.Get(support.Ctx, id)
 	if err != nil {
 		support.RedLn("No droplet is returned")
 		panic(err)
 	}
-	dData := make(map[string]string)
-	dData["ID"] = strconv.Itoa(d.ID)
-	dData["Name"] = d.Name
-	dData["Tags"] = strings.Join(d.Tags[:], ",")
-	for _, n := range d.Networks.V4 {
-		if n.Type == "public" {
-			dData["PublicIP"] = n.IPAddress
-		}
-		if n.Type == "private" {
-			dData["PrivateIP"] = n.IPAddress
-		}
-	}
-	dData["Region"] = d.Region.Slug
-	return dData
+	return *d
 }
 
 // ReturnDropletsByTag return droplets identified by the provided tag.

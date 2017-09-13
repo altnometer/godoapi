@@ -72,9 +72,10 @@ func SetUpMaster(env, reg string) (string, string) {
 			if d.Name != "" {
 				support.RedLn("Only SINGLE master is handled currently!!!")
 				dData := droplet.ReturnDropletByID(d.ID)
-				s.Start()
-				publicIP = dData["PublicIP"]
-				s.Stop()
+				publicIP, err = dData.PublicIPv4()
+				if err != nil {
+					log.Fatal(err)
+				}
 				break
 			}
 		}
