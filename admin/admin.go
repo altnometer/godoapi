@@ -1,12 +1,17 @@
 package admin
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"time"
 
 	"github.com/altnometer/godoapi/droplet"
 	"github.com/altnometer/godoapi/lib/support"
+	"github.com/digitalocean/godo"
 )
 
 var argDropletFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
@@ -54,10 +59,34 @@ func parseArgsCreateAdmin(args []string) error {
 	subCmd := flag.NewFlagSet("admin", flag.ExitOnError)
 	regPtr := subCmd.String("region", "fra1", "-region=fra1")
 	sizePtr := subCmd.String("size", "512mb", "-size=<512mb|1gb|2gb...>")
+	userNamePtr := subCmd.String("username", "", "-username=<somename>")
+	passwordPtr := subCmd.String("password", "", "-password=<mypassword>")
+	sshKeyPathPtr := subCmd.String("sshkeypath", "", "-sshkeypath=</ssh/path/myprivkey>")
 	subCmd.Parse(args)
 	if subCmd.Parsed() {
 		if err := support.ValidateRegions(regPtr); err != nil {
+			fmt.Println(err)
+			subCmd.PrintDefaults()
 			return err
+		}
+		if *userNamePtr == "" {
+			err := errors.New(support.RedSp("no username arg"))
+			fmt.Println(err)
+			subCmd.PrintDefaults()
+			return err
+		}
+		if *passwordPtr == "" {
+			err := errors.New(support.RedSp("no password arg"))
+			fmt.Println(err)
+			subCmd.PrintDefaults()
+			return err
+		}
+		if *sshKeyPathPtr == "" {
+			err := errors.New(support.RedSp("no sshkeypath arg"))
+			fmt.Println(err)
+			subCmd.PrintDefaults()
+			return err
+
 		}
 	}
 	if len(args) < 1 {
@@ -79,10 +108,70 @@ func parseArgsCreateAdmin(args []string) error {
 	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
 	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
-	droplet.CreateDroplet(createDropData)
+	if err := setupAdmin(createDropData,
+		*userNamePtr, *passwordPtr, *sshKeyPathPtr); err != nil {
+		return err
+	}
 	return nil
 }
 func parseArgsDeleteAdmin(args []string) error {
 	log.Println("called delete admin")
+	return nil
+}
+
+func setupAdmin(
+	crData *godo.DropletMultiCreateRequest,
+	userName,
+	password,
+	sshKeyPath string) error {
+
+	// Check if admin server exist.
+	droplets, err := droplet.ReturnDropletsByTag("admin")
+	var dr godo.Droplet
+	if len(droplets) > 0 {
+		dr = droplets[0]
+	} else {
+		dr = droplet.CreateDroplet(crData)[0]
+		fmt.Println("Wait for the droplet to boot up...")
+		time.Sleep(3 * time.Second)
+		dr = droplet.ReturnDropletByID(dr.ID)
+	}
+	publicIP, err := dr.PublicIPv4()
+	if err != nil {
+		return err
+	}
+	args := []string{
+		"/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh",
+		"--TARGET_MACHINE_IP",
+		publicIP,
+		"--PATH_TO_SSH_PRIV_KEYS",
+		sshKeyPath,
+		"--USERNAME",
+		userName,
+		"--USER_PASSWORD",
+		password,
+	}
+	if err := os.Setenv("DOSSHKeyPath", sshKeyPath); err != nil {
+		return err
+	}
+	// argstr := strings.Join(arg, " ")
+	// support.YellowLn("Executing ssh from golang with following args: ")
+	// fmt.Printf("argstr = %+v\n", argstr)
+
+	// cmdOut, err := exec.Command("ssh", arg...).Output()
+	cmd := exec.Command("bash", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	// TODO: scp vimsetup and install vim
+	// TODO: scp bashsetup and configure
+	// support.ExecSSH("root", publicIP, args)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
