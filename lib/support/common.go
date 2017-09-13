@@ -202,7 +202,7 @@ func GetSSHKeyPath() string {
 }
 
 // FetchSSHOutput executes ssh cmd and returns cmd output.
-func FetchSSHOutput(userName, IP, sshKeyPath string, sshCmds []string) string {
+func FetchSSHOutput(userName, ip, sshKeyPath string, sshCmds []string) string {
 	cmdArgs := append(
 		[]string{
 			"-o",
@@ -211,7 +211,7 @@ func FetchSSHOutput(userName, IP, sshKeyPath string, sshCmds []string) string {
 			"StrictHostKeyChecking=no",
 			"-i",
 			sshKeyPath,
-			fmt.Sprintf("%s@%s", userName, IP),
+			fmt.Sprintf("%s@%s", userName, ip),
 		},
 		sshCmds...,
 	)
@@ -231,8 +231,8 @@ func FetchSSHOutput(userName, IP, sshKeyPath string, sshCmds []string) string {
 }
 
 // ExecSSH execute ssh command interactively.
-func ExecSSH(userName, IP string, cmds []string) {
-	// sshCommander := SSHCommander{userName, IP, sshKeyPath}
+func ExecSSH(userName, ip string, cmds []string) {
+	// sshCommander := SSHCommander{userName, ip, sshKeyPath}
 	// sshOpt := fmt.Sprintf("-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i %s", sshKeyPath)
 	sshKeyPath := GetSSHKeyPath()
 	// cmds := []string{
@@ -246,7 +246,7 @@ func ExecSSH(userName, IP string, cmds []string) {
 			"StrictHostKeyChecking=no",
 			"-i",
 			sshKeyPath,
-			fmt.Sprintf("%s@%s", userName, IP),
+			fmt.Sprintf("%s@%s", userName, ip),
 		},
 		cmds...,
 	)
