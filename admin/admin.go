@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/altnometer/godoapi/droplet"
 	"github.com/altnometer/godoapi/lib/support"
 )
 
@@ -19,7 +20,7 @@ func ParseArgs(args []string) error {
 	}
 	switch args[0] {
 	case "list":
-		if err := parseArgsListAdmin(args[1:]); err != nil {
+		if err := listAdmin(); err != nil {
 			return err
 		}
 	case "create":
@@ -40,25 +41,45 @@ func ParseArgs(args []string) error {
 	return nil
 }
 
-func parseArgsListAdmin(args []string) error {
-	log.Println("called list admin")
-	subCmd := flag.NewFlagSet("admin", flag.ExitOnError)
-	// regPtr := subCmd.String("region", "fra1", "-region=fra1")
-	subCmd.Parse(args)
-	if subCmd.Parsed() {
-		// support.ValidateRegions(regPtr)
+func listAdmin() error {
+	droplets, err := droplet.ReturnDropletsByTag("admin")
+	if err != nil {
+		return err
 	}
-	// if len(args) < 1 {
-	// 	support.Red.Println("Provide the args, please.")
-	// 	subCmd.PrintDefaults()
-	// 	os.Exit(1)
-	// }
-	// fmt.Printf("*regPtr = %+v\n", *regPtr)
+	support.PrintDropData(droplets)
 	return nil
 }
 
 func parseArgsCreateAdmin(args []string) error {
-	log.Println("called create admin")
+	subCmd := flag.NewFlagSet("admin", flag.ExitOnError)
+	regPtr := subCmd.String("region", "fra1", "-region=fra1")
+	sizePtr := subCmd.String("size", "512mb", "-size=<512mb|1gb|2gb...>")
+	subCmd.Parse(args)
+	if subCmd.Parsed() {
+		if err := support.ValidateRegions(regPtr); err != nil {
+			return err
+		}
+	}
+	if len(args) < 1 {
+		err := support.ErrBadArgs
+		support.Red.Println(err)
+		subCmd.PrintDefaults()
+		return err
+	}
+	fmt.Printf("*regPtr = %+v\n", *regPtr)
+	createDropData := droplet.GetDefaultDropCreateData()
+	createDropData.Size = *sizePtr
+	createDropData.Region = *regPtr
+	createDropData.Names = []string{"admin"}
+	createDropData.Tags = []string{"admin"}
+	// fmt.Printf("createDropData = %+v\n", createDropData)
+	// fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
+	// fmt.Printf("multiName[0] = %+v\n", multiName[0])
+	// fmt.Printf("(&multiTag).String() = %+v\n", (&multiTag).String())
+	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
+	// fmt.Printf("*regPtr = %+v\n", *regPtr)
+	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
+	droplet.CreateDroplet(createDropData)
 	return nil
 }
 func parseArgsDeleteAdmin(args []string) error {
