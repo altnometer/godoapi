@@ -60,10 +60,8 @@ func deleteAllDroplets() error {
 	}
 	for _, dData := range droplets {
 		dID := dData.ID
-		fmt.Println("Delete droplet?[y/N]")
-		fmt.Printf("  Name  %v\n", support.YellowSp(dData.Name))
-		fmt.Printf("  ID    %+v\n", dID)
-		fmt.Printf("  tag   %+v\n", dData.Tags)
+		fmt.Printf("Delete droplet  Name  %v, ID %v, tag %v?[y/N] ",
+			support.YellowSp(dData.Name), dID, dData.Tags)
 		reader := bufio.NewReader(os.Stdin)
 		char, _, err := reader.ReadRune()
 		if err != nil {
