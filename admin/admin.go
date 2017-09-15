@@ -5,8 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
@@ -133,15 +131,17 @@ func setupAdmin(
 	} else {
 		dr = droplet.CreateDroplet(crData)[0]
 		fmt.Println("Wait for the droplet to boot up...")
-		time.Sleep(3 * time.Second)
+		time.Sleep(10 * time.Second)
 		dr = droplet.ReturnDropletByID(dr.ID)
 	}
 	publicIP, err := dr.PublicIPv4()
 	if err != nil {
 		return err
 	}
-	args := []string{
-		"/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh",
+	var scriptPath string
+	var args []string
+	scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh"
+	cmdOpts := []string{
 		"--TARGET_MACHINE_IP",
 		publicIP,
 		"--PATH_TO_SSH_PRIV_KEYS",
@@ -151,27 +151,17 @@ func setupAdmin(
 		"--USER_PASSWORD",
 		password,
 	}
-	if err := os.Setenv("DOSSHKeyPath", sshKeyPath); err != nil {
+	support.YellowPf("executing %s\n", scriptPath)
+	args = append([]string{"bash", scriptPath}, cmdOpts...)
+	if err := support.ExecCmd(args); err != nil {
 		return err
 	}
-	// argstr := strings.Join(arg, " ")
-	// support.YellowLn("Executing ssh from golang with following args: ")
-	// fmt.Printf("argstr = %+v\n", argstr)
-
-	// cmdOut, err := exec.Command("ssh", arg...).Output()
-	cmd := exec.Command("bash", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
+	// scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-2.sh"
+	scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/exec-admin2.sh"
+	support.YellowPf("executing %s\n", scriptPath)
+	args = append([]string{"bash", scriptPath}, cmdOpts...)
+	if err := support.ExecCmd(args); err != nil {
 		return err
 	}
-	// TODO: scp vimsetup and install vim
-	// TODO: scp bashsetup and configure
-	// support.ExecSSH("root", publicIP, args)
-	// if err != nil {
-	// 	return err
-	// }
 	return nil
 }
