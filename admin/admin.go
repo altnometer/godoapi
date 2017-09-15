@@ -126,8 +126,10 @@ func setupAdmin(
 	// Check if admin server exist.
 	droplets, err := droplet.ReturnDropletsByTag("admin")
 	var dr godo.Droplet
+	adminExist := false
 	if len(droplets) > 0 {
 		dr = droplets[0]
+		adminExist = true
 	} else {
 		dr = droplet.CreateDroplet(crData)[0]
 		fmt.Println("Wait for the droplet to boot up...")
@@ -138,9 +140,6 @@ func setupAdmin(
 	if err != nil {
 		return err
 	}
-	var scriptPath string
-	var args []string
-	scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh"
 	cmdOpts := []string{
 		"--TARGET_MACHINE_IP",
 		publicIP,
@@ -151,15 +150,19 @@ func setupAdmin(
 		"--USER_PASSWORD",
 		password,
 	}
-	support.YellowPf("executing %s\n", scriptPath)
-	args = append([]string{"bash", scriptPath}, cmdOpts...)
-	if err := support.ExecCmd(args); err != nil {
-		return err
+	if !adminExist {
+		scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh"
+		support.YellowPf("executing %s\n", scriptPath)
+		args := append([]string{"bash", scriptPath}, cmdOpts...)
+		if err := support.ExecCmd(args); err != nil {
+			return err
+		}
+
 	}
 	// scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-2.sh"
-	scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/exec-admin2.sh"
+	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/exec-admin2.sh"
 	support.YellowPf("executing %s\n", scriptPath)
-	args = append([]string{"bash", scriptPath}, cmdOpts...)
+	args := append([]string{"bash", scriptPath}, cmdOpts...)
 	if err := support.ExecCmd(args); err != nil {
 		return err
 	}
