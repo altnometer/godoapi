@@ -189,7 +189,22 @@ func ValidateMemSize(memSize string) (bool, error) {
 	return true, nil
 }
 
-/////////////////////SSH functions/////////////////////////////////////////////
+/////////////////////execute cmd///////////////////////////////////////////////
+
+// ExecCmd execute command interactively.
+func ExecCmd(args []string) error {
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/////////////////////execute ssh///////////////////////////////////////////////
 
 // GetSSHKeyPath returns user provided path to ssh keys.
 func GetSSHKeyPath() string {
