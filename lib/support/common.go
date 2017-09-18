@@ -4,13 +4,20 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 
 	"github.com/digitalocean/godo"
 	"github.com/fatih/color"
 )
+
+/////////////////////////////files required///////////////////////////////////
+
+// TSLArchSource is where you take letsencrypt ssl/tsl files.
+var TSLArchSource = getTSLArchPath()
 
 /////////////////////////////consts///////////////////////////////////////////
 
@@ -110,7 +117,27 @@ func ValidateRegions(regPtr *string) error {
 	return nil
 }
 
-/////////////////////Supporting functions//////////////////////////////////////
+////////////////////////functions//////////////////////////////////////////////
+
+func getHomeDir() (string, error) {
+	user, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return user.HomeDir, nil
+}
+
+func getTSLArchPath() string {
+	homeDir, err := getHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	path := homeDir + "/letsencrypt.redmoo.gz.gpg"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+	return path
+}
 
 // GetUserInput query for a user input and return int.
 func GetUserInput(promt string) string {
