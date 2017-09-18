@@ -126,10 +126,8 @@ func setupAdmin(
 	// Check if admin server exist.
 	droplets, err := droplet.ReturnDropletsByTag("admin")
 	var dr godo.Droplet
-	adminExist := false
 	if len(droplets) > 0 {
 		dr = droplets[0]
-		adminExist = true
 	} else {
 		dr = droplet.CreateDroplet(crData)[0]
 		fmt.Println("Wait for the droplet to boot up...")
@@ -150,19 +148,30 @@ func setupAdmin(
 		"--USER_PASSWORD",
 		password,
 	}
-	if !adminExist {
+	if c, err := support.GetSSHClient("root", publicIP, sshKeyPath); err == nil {
+		defer c.Close()
 		scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh"
 		support.YellowPf("executing %s\n", scriptPath)
 		args := append([]string{"bash", scriptPath}, cmdOpts...)
 		if err := support.ExecCmd(args); err != nil {
 			return err
 		}
-
 	}
 	// scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-2.sh"
 	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/exec-admin2.sh"
 	support.YellowPf("executing %s\n", scriptPath)
 	args := append([]string{"bash", scriptPath}, cmdOpts...)
+	if err := support.ExecCmd(args); err != nil {
+		return err
+	}
+	support.YellowLn("Copy letsencrypt files ...")
+	// --recipient 80CCB3DC -d support.TSLArchSource()
+	args = append([]string{"gpg",
+		"-d", support.TSLArchSource, "|",
+		"ssh", "-q", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
+		"-i", sshKeyPath, userName + "@" + publicIP,
+		" sudo -E bash -c \"tar -C /etc -xzf -\"",
+	})
 	if err := support.ExecCmd(args); err != nil {
 		return err
 	}
