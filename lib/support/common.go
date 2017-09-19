@@ -132,7 +132,7 @@ func getTSLArchPath() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	path := homeDir + "/letsencrypt.redmoo.gz.gpg"
+	path := homeDir + "/letsencrypt.redmoo.gz"
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
