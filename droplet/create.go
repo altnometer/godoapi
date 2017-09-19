@@ -44,6 +44,7 @@ func ParseArgsCreateDrop(args []string) error {
 	var multiName support.NameList
 	subCmd.Var(&multiName, "name", "-name=<name1[,name2...]>")
 	regPtr := subCmd.String("region", "fra1", "-region=fra1")
+	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
 	sizePtr := subCmd.String("size", "512mb", "-size=<512mb|1gb|2gb...>")
 	var multiTag support.NameList
 	subCmd.Var(&multiTag, "tag", "-tag=<tag1[,tag2...]>")
@@ -79,7 +80,7 @@ func ParseArgsCreateDrop(args []string) error {
 	createDropData.Size = *sizePtr
 	createDropData.Region = *regPtr
 	createDropData.Names = multiName
-	createDropData.Tags = multiTag
+	createDropData.Tags = append(multiTag, *envPtr)
 	// fmt.Printf("createDropData = %+v\n", createDropData)
 	// fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
 	// fmt.Printf("multiName[0] = %+v\n", multiName[0])
