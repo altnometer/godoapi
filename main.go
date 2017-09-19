@@ -33,7 +33,10 @@ func main() {
 	case "setupk8s":
 		setupk8s.ParseArgs(os.Args[2:])
 	case "admin":
-		admin.ParseArgs(os.Args[2:])
+		err := admin.ParseArgs(os.Args[2:])
+		if err != nil {
+			log.Fatal(err)
+		}
 	default:
 		fmt.Println(argEntryFailMsg)
 		// fmt.Println("")
