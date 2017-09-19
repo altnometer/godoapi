@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"path/filepath"
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
@@ -56,6 +57,7 @@ func listAdmin() error {
 func parseArgsCreateAdmin(args []string) error {
 	subCmd := flag.NewFlagSet("admin", flag.ExitOnError)
 	regPtr := subCmd.String("region", "fra1", "-region=fra1")
+	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
 	sizePtr := subCmd.String("size", "512mb", "-size=<512mb|1gb|2gb...>")
 	userNamePtr := subCmd.String("username", "", "-username=<somename>")
 	passwordPtr := subCmd.String("password", "", "-password=<mypassword>")
@@ -98,7 +100,7 @@ func parseArgsCreateAdmin(args []string) error {
 	createDropData.Size = *sizePtr
 	createDropData.Region = *regPtr
 	createDropData.Names = []string{"admin"}
-	createDropData.Tags = []string{"admin"}
+	createDropData.Tags = []string{"admin", *envPtr}
 	// fmt.Printf("createDropData = %+v\n", createDropData)
 	// fmt.Printf("(&multiName).String() = %+v\n", (&multiName).String())
 	// fmt.Printf("multiName[0] = %+v\n", multiName[0])
@@ -157,7 +159,6 @@ func setupAdmin(
 			return err
 		}
 	}
-	// scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-2.sh"
 	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/exec-admin2.sh"
 	support.YellowPf("executing %s\n", scriptPath)
 	args := append([]string{"bash", scriptPath}, cmdOpts...)
@@ -165,14 +166,23 @@ func setupAdmin(
 		return err
 	}
 	support.YellowLn("Copy letsencrypt files ...")
-	// --recipient 80CCB3DC -d support.TSLArchSource()
-	args = append([]string{"gpg",
-		"-d", support.TSLArchSource, "|",
-		"ssh", "-q", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
-		"-i", sshKeyPath, userName + "@" + publicIP,
-		" sudo -E bash -c \"tar -C /etc -xzf -\"",
+	args = append([]string{
+		"scp", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
+		"-i", sshKeyPath, support.TSLArchSource,
+		userName + "@" + publicIP + ":/home/" + userName,
+		// " sudo -E bash -c \"tar -C /etc -xzf -\"",
 	})
 	if err := support.ExecCmd(args); err != nil {
+		return err
+	}
+	archName := filepath.Base(support.TSLArchSource)
+	sshSession, err := support.GetSSHInterSession(userName, publicIP, sshKeyPath)
+	if err != nil {
+		return err
+	}
+	defer sshSession.Close()
+	err = sshSession.Run(fmt.Sprintf("sudo -E bash -c 'tar -C /etc -xvzf %s'", archName))
+	if err != nil {
 		return err
 	}
 	return nil
