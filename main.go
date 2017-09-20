@@ -8,15 +8,19 @@ import (
 
 	"github.com/altnometer/godoapi/admin"
 	"github.com/altnometer/godoapi/droplet"
+	"github.com/altnometer/godoapi/ip"
 	"github.com/altnometer/godoapi/k8s/setupk8s"
 	"github.com/altnometer/godoapi/lib/support"
 	"github.com/altnometer/godoapi/volume"
 )
 
-var argEntryFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s> subcommand, please.",
-	support.YellowSp("droplet"), support.YellowSp("volume"),
+var argEntryFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s|%s> subcommand, please.",
+	support.YellowSp("admin"),
+	support.YellowSp("droplet"),
+	support.YellowSp("ip"),
 	support.YellowSp("setupk8s"),
-	support.YellowSp("admin"))
+	support.YellowSp("volume"),
+)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -26,6 +30,10 @@ func main() {
 	switch os.Args[1] {
 	case "droplet":
 		if err := droplet.ParseArgs(os.Args[2:]); err != nil {
+			log.Fatal(support.RedSp(err))
+		}
+	case "ip":
+		if err := ip.ParseArgs(os.Args[2:]); err != nil {
 			log.Fatal(support.RedSp(err))
 		}
 	case "volume":
