@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
+	"github.com/altnometer/godoapi/ip"
 	"github.com/altnometer/godoapi/lib/support"
 	"github.com/digitalocean/godo"
 )
@@ -150,40 +152,96 @@ func setupAdmin(
 		"--USER_PASSWORD",
 		password,
 	}
-	if c, err := support.GetSSHClient("root", publicIP, sshKeyPath); err == nil {
-		defer c.Close()
+	if sshRootClient, err := support.GetSSHClient("root", publicIP, sshKeyPath); err == nil {
+		defer sshRootClient.Close()
+		sshSession, err := support.GetSSHInterSession(sshRootClient)
+		if err != nil {
+			return err
+		}
 		scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-1.sh"
 		support.YellowPf("executing %s\n", scriptPath)
-		args := append([]string{"bash", scriptPath}, cmdOpts...)
+		// args := append([]string{"bash", scriptPath}, cmdOpts...)
+		// if err := support.ExecCmd(args); err != nil {
+		// 	return err
+		// }
+		args := append([]string{
+			"scp", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
+			"-i", sshKeyPath, scriptPath,
+			"root" + "@" + publicIP + ":/root",
+			// " sudo -E bash -c \"tar -C /etc -xzf -\"",
+		})
 		if err := support.ExecCmd(args); err != nil {
 			return err
 		}
+		scriptName := filepath.Base(scriptPath)
+		cmd := fmt.Sprintf("/bin/bash ./%s %s", scriptName, strings.Join(cmdOpts, " "))
+		if err = sshSession.Run(cmd); err != nil {
+			return err
+		}
+		// sshSession.Close()
 	}
-	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/exec-admin2.sh"
-	support.YellowPf("executing %s\n", scriptPath)
-	args := append([]string{"bash", scriptPath}, cmdOpts...)
-	if err := support.ExecCmd(args); err != nil {
-		return err
-	}
-	support.YellowLn("Copy letsencrypt files ...")
-	args = append([]string{
+	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/admin-2.sh"
+	args := append([]string{
 		"scp", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
-		"-i", sshKeyPath, support.TSLArchSource,
+		"-i", sshKeyPath, scriptPath,
 		userName + "@" + publicIP + ":/home/" + userName,
-		// " sudo -E bash -c \"tar -C /etc -xzf -\"",
 	})
 	if err := support.ExecCmd(args); err != nil {
 		return err
 	}
-	archName := filepath.Base(support.TSLArchSource)
-	sshSession, err := support.GetSSHInterSession(userName, publicIP, sshKeyPath)
+	scriptName := filepath.Base(scriptPath)
+	cmd := fmt.Sprintf("sudo -E bash ./%s %s", scriptName, strings.Join(cmdOpts, " "))
+	support.YellowPf("executing %s\n", cmd)
+	sshClient, err := support.GetSSHClient(userName, publicIP, sshKeyPath)
 	if err != nil {
 		return err
 	}
-	defer sshSession.Close()
-	err = sshSession.Run(fmt.Sprintf("sudo -E bash -c 'tar -C /etc -xvzf %s'", archName))
+	defer sshClient.Close()
+	sshSession, err := support.GetSSHInterSession(sshClient)
 	if err != nil {
 		return err
+	}
+	if err = sshSession.Run(cmd); err != nil {
+		return err
+	}
+	sshSession.Close()
+	// args = append([]string{"bash", scriptPath}, cmdOpts...)
+	// if err := support.ExecCmd(args); err != nil {
+	// 	return err
+	// }
+	// Enable serving 'site unavailable page'
+	// func UserConfirmDefaultN(prompt string) (conf bool, err error) {
+	promtMsg := "Set up nginx serving 'site unavailable page'?"
+	confirmed, err := support.UserConfirmDefaultN(promtMsg)
+	if confirmed {
+		support.YellowLn("Copy letsencrypt files ...")
+		args = append([]string{
+			"scp", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
+			"-i", sshKeyPath, support.TSLArchSource,
+			userName + "@" + publicIP + ":/home/" + userName,
+			// " sudo -E bash -c \"tar -C /etc -xzf -\"",
+		})
+		if err := support.ExecCmd(args); err != nil {
+			return err
+		}
+		sshSession, err := support.GetSSHInterSession(sshClient)
+		if err != nil {
+			return err
+		}
+		archName := filepath.Base(support.TSLArchSource)
+		cmd := fmt.Sprintf("sudo tar -C /etc -xvzf %s", archName)
+		cmd = cmd + " && sleep 1 && " + "docker pull redmoo/unavailable:latest"
+		// cmd = cmd + " && sleep 1 && " + "docker rm $(docker stop $(docker -a -q --filter ancestor=redmoo/unavailable))"
+		cmd = cmd + " && sleep 2 && " + "docker run -it -v /etc/letsencrypt/:/etc/letsencrypt/" +
+			" -p 443:443 -p 80:80 -p 10254:10254 -d redmoo/unavailable"
+		support.YellowPf("executing %s\n", cmd)
+		if err = sshSession.Run(cmd); err != nil {
+			return err
+		}
+		sshSession.Close()
+		if err := ip.AssignIP(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
