@@ -63,12 +63,8 @@ func GetSSHClient(userName, host, sskKeyPath string) (*ssh.Client, error) {
 // Run command with session.Run("/usr/bin/whoami").
 // Read output with var b bytes.Buffer, session.Stdout = &b,
 // fmt.Println(b.String())
-func GetSSHSession(userName, host, sskKeyPath string) (*ssh.Session, error) {
-	client, err := GetSSHClient(userName, host, sskKeyPath)
-	if err != nil {
-		return nil, err
-	}
-	session, err := client.NewSession()
+func GetSSHSession(sshClient *ssh.Client) (*ssh.Session, error) {
+	session, err := sshClient.NewSession()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create session: %s", err)
 	}
@@ -79,8 +75,8 @@ func GetSSHSession(userName, host, sskKeyPath string) (*ssh.Session, error) {
 // Close() session after use.
 // Set env var with err = session.Setenv("LC_USR_DIR", "/usr").
 // Run commands with err = session.Run("ls -l $LC_USR_DIR").
-func GetSSHInterSession(userName, host, sskKeyPath string) (*ssh.Session, error) {
-	session, err := GetSSHSession(userName, host, sskKeyPath)
+func GetSSHInterSession(sshClient *ssh.Client) (*ssh.Session, error) {
+	session, err := GetSSHSession(sshClient)
 	if err != nil {
 		return nil, err
 	}
