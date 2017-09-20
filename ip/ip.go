@@ -21,7 +21,7 @@ func ParseArgs(args []string) error {
 	}
 	switch args[0] {
 	case "assign":
-		if err := assignIP(); err != nil {
+		if err := AssignIP(); err != nil {
 			return err
 		}
 	case "list":
@@ -75,8 +75,8 @@ func getFloatIps() ([]godo.FloatingIP, error) {
 	return fIPs, nil
 }
 
-func assignIP() error {
-	fmt.Println("called assignIP()")
+// AssignIP assigns users selected floating ip to selected droplet.
+func AssignIP() error {
 	fIPs, err := getFloatIps()
 	if err != nil {
 		return err
