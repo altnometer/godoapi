@@ -152,7 +152,7 @@ func setupAdmin(
 		"--USER_PASSWORD",
 		password,
 	}
-	if sshRootClient, err := support.GetSSHClient("root", publicIP, sshKeyPath); err == nil {
+	if sshRootClient, err := support.GetSSHClient("root", publicIP); err == nil {
 		defer sshRootClient.Close()
 		sshSession, err := support.GetSSHInterSession(sshRootClient)
 		if err != nil {
@@ -192,7 +192,7 @@ func setupAdmin(
 	scriptName := filepath.Base(scriptPath)
 	cmd := fmt.Sprintf("sudo -E bash ./%s %s", scriptName, strings.Join(cmdOpts, " "))
 	support.YellowPf("executing %s\n", cmd)
-	sshClient, err := support.GetSSHClient(userName, publicIP, sshKeyPath)
+	sshClient, err := support.GetSSHClient(userName, publicIP)
 	if err != nil {
 		return err
 	}

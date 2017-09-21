@@ -8,10 +8,12 @@ import (
 	"os"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
-func getSSHConfig(userName, sshKeyPath string) (*ssh.ClientConfig, error) {
-	key, err := getSSHKey(sshKeyPath)
+func getSSHConfig(userName string) (*ssh.ClientConfig, error) {
+	// key, err := getSSHKey(sshKeyPath)
+	authMeth, err := getAuthMeth()
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +21,8 @@ func getSSHConfig(userName, sshKeyPath string) (*ssh.ClientConfig, error) {
 	confPtr := &ssh.ClientConfig{
 		User: userName,
 		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(key),
+			// ssh.PublicKeys(key),
+			authMeth,
 		},
 		HostKeyCallback: keyPrint,
 	}
@@ -39,6 +42,17 @@ func getSSHKey(sshKeyPath string) (ssh.Signer, error) {
 	}
 	return key, nil
 }
+func getAuthMeth() (ssh.AuthMethod, error) {
+	sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
+	if err != nil {
+		fmt.Printf("Did you run %s?\n",
+			RedSp("eval $(ssh-agent -s) && ssh-add ~/.ssh/privkey"),
+		)
+		return nil, err
+	}
+	sshAuthMeth := ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers)
+	return sshAuthMeth, nil
+}
 
 func keyPrint(dialAddr string, addr net.Addr, key ssh.PublicKey) error {
 	// fmt.Printf("%s %s %s\n", strings.Split(dialAddr, ":")[0], key.Type(), base64.StdEncoding.EncodeToString(key.Marshal()))
@@ -46,8 +60,8 @@ func keyPrint(dialAddr string, addr net.Addr, key ssh.PublicKey) error {
 }
 
 // GetSSHClient return *ssh.Client
-func GetSSHClient(userName, host, sskKeyPath string) (*ssh.Client, error) {
-	sshConfig, err := getSSHConfig(userName, sskKeyPath)
+func GetSSHClient(userName, host string) (*ssh.Client, error) {
+	sshConfig, err := getSSHConfig(userName)
 	if err != nil {
 		return nil, err
 	}
