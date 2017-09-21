@@ -24,6 +24,9 @@ var TSLArchSource = getTSLArchPath()
 // VolByIDPrefix holds prefix for vol link names in /dev/disk/by-id dir.
 const VolByIDPrefix string = "scsi-0DO_Volume_"
 
+// Master1Name holds the name of k8s master node.
+const Master1Name string = "master-1"
+
 /////////////////////////////errors///////////////////////////////////////////
 
 // ErrBadArgs used when no, or not all args provided.
