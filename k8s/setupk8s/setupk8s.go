@@ -39,7 +39,6 @@ func parseArgsSetupK8S(args []string) error {
 	subCmd := flag.NewFlagSet("setupk8s", flag.ExitOnError)
 	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
 	regPtr := subCmd.String("region", "fra1", "-region=fra1")
-	subCmd.Parse(args)
 	sizePtr := subCmd.String("size", "1mb", "-size=<512mb|1gb|2gb...>")
 	userNamePtr := subCmd.String("username", "", "-username=<somename>")
 	passwordPtr := subCmd.String("password", "", "-password=<mypassword>")
