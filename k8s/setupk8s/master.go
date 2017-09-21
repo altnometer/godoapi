@@ -15,13 +15,11 @@ import (
 )
 
 // SetUpMaster would setup k8s master.
-func SetUpMaster(userName, userPassword string,
-	dropData *godo.DropletMultiCreateRequest) (string, string) {
-	sshKeyPath := os.Getenv("DOSSHKeyPath")
-	if sshKeyPath == "" {
-		support.YellowLn("You can set env var DOSSHKeyPath!")
-		sshKeyPath = support.GetUserInput("Type in a DOSSHKeyPath: ")
-	}
+func SetUpMaster(
+	crData *godo.DropletMultiCreateRequest,
+	userName,
+	password,
+	sshKeyPath string) (string, string) {
 	sshCmdGetToken := []string{
 		"sudo",
 		"kubeadm", "token", "list", "|", "awk",
@@ -47,7 +45,7 @@ func SetUpMaster(userName, userPassword string,
 		}
 	}
 	if token == "" {
-		drSpecs := droplet.CreateDroplet(dropData)
+		drSpecs := droplet.CreateDroplet(crData)
 		s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 		s.Start()
 		// Give it some time for IPs to be assigned to the droplets.
@@ -80,7 +78,7 @@ func SetUpMaster(userName, userPassword string,
 		"--USERNAME",
 		userName,
 		"--USER_PASSWORD",
-		userPassword,
+		password,
 	}
 	argstr := strings.Join(arg, " ")
 	support.YellowLn("Executing ssh from golang with following args: ")

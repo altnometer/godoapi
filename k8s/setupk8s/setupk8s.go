@@ -83,7 +83,12 @@ func parseArgsSetupK8S(args []string) error {
 	createDropData.Names = []string{"master-1"}
 	createDropData.Tags = []string{"master", *envPtr}
 	//********************
-	ip, token := SetUpMaster(*userNamePtr, *userNamePtr, createDropData)
+	ip, token := SetUpMaster(
+		createDropData,
+		*userNamePtr,
+		*passwordPtr,
+		*sshKeyPathPtr,
+	)
 	SetUpNode(*envPtr, *regPtr, ip, token)
 	//********************
 	return nil
