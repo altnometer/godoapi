@@ -15,13 +15,13 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-var argDropletFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
+var argAdminFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
 	support.YellowSp("list"), support.YellowSp("create"), support.YellowSp("delete"))
 
 // ParseArgs handles os.Args and calls relevant functions in the package.
 func ParseArgs(args []string) error {
 	if len(args) < 1 {
-		fmt.Println(argDropletFailMsg)
+		fmt.Println(argAdminFailMsg)
 		return support.ErrBadArgs
 	}
 	switch args[0] {
@@ -41,7 +41,7 @@ func ParseArgs(args []string) error {
 	default:
 		fmt.Print("Incorrect arg: ")
 		support.RedBold.Println(args[0])
-		fmt.Println(argDropletFailMsg)
+		fmt.Println(argAdminFailMsg)
 		return support.ErrBadArgs
 	}
 	return nil
