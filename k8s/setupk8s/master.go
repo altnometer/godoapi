@@ -11,20 +11,12 @@ import (
 	"github.com/altnometer/godoapi/droplet"
 	"github.com/altnometer/godoapi/lib/support"
 	"github.com/briandowns/spinner"
+	"github.com/digitalocean/godo"
 )
 
 // SetUpMaster would setup k8s master.
-func SetUpMaster(env, reg string) (string, string) {
-	userName := os.Getenv("DOHostUsername")
-	if userName == "" {
-		support.YellowLn("You can set env var DOHostUsername!")
-		userName = support.GetUserInput("Type in a DOHostUsername: ")
-	}
-	userPassword := os.Getenv("DOHostUsernamePassword")
-	if userPassword == "" {
-		support.YellowLn("You can set env var DOHostUsernamePassword!")
-		userPassword = support.GetUserInput("Type in a DOHostUsernamePassword: ")
-	}
+func SetUpMaster(userName, userPassword string,
+	dropData *godo.DropletMultiCreateRequest) (string, string) {
 	sshKeyPath := os.Getenv("DOSSHKeyPath")
 	if sshKeyPath == "" {
 		support.YellowLn("You can set env var DOSSHKeyPath!")
@@ -35,7 +27,6 @@ func SetUpMaster(env, reg string) (string, string) {
 		"kubeadm", "token", "list", "|", "awk",
 		"'NR == 2 { printf $1 }'",
 	}
-	master1Name := "master-1"
 	runningMasters, err := droplet.ReturnDropletsByTag("master")
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +34,7 @@ func SetUpMaster(env, reg string) (string, string) {
 	var token string
 	var publicIP string
 	for _, d := range runningMasters {
-		if d.Name == master1Name {
+		if d.Name == support.Master1Name {
 			publicIP, err := d.PublicIPv4()
 			if err != nil {
 				log.Fatal(err)
@@ -51,17 +42,12 @@ func SetUpMaster(env, reg string) (string, string) {
 			token = support.FetchSSHOutput("root", publicIP, sshKeyPath, sshCmdGetToken)
 			support.YellowLn("Set env var for k8s token.")
 			os.Setenv("K8SToken", token)
-			support.RedPf("Droplet with %s name already exist!", master1Name)
+			support.RedPf("Droplet with %s name already exist!", support.Master1Name)
 			// return d["publicIP"], token
 		}
 	}
 	if token == "" {
-		reqDataPtr := droplet.GetDefaultDropCreateData()
-		reqDataPtr.Size = "1gb"
-		reqDataPtr.Region = reg
-		reqDataPtr.Names = []string{"master-1"}
-		reqDataPtr.Tags = []string{"master", env}
-		drSpecs := droplet.CreateDroplet(reqDataPtr)
+		drSpecs := droplet.CreateDroplet(dropData)
 		s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 		s.Start()
 		// Give it some time for IPs to be assigned to the droplets.
