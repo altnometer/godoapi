@@ -39,7 +39,9 @@ func main() {
 	case "volume":
 		volume.ParseArgs(os.Args[2:])
 	case "setupk8s":
-		setupk8s.ParseArgs(os.Args[2:])
+		if err := setupk8s.ParseArgs(os.Args[2:]); err != nil {
+			log.Fatal(support.RedSp(err))
+		}
 	case "admin":
 		err := admin.ParseArgs(os.Args[2:])
 		if err != nil {
