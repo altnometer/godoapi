@@ -1,7 +1,6 @@
 package droplet
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -88,28 +87,31 @@ func ParseArgsCreateDrop(args []string) error {
 	// // fmt.Printf("*namePtr = %+v\n", *namePtr)
 	// fmt.Printf("*regPtr = %+v\n", *regPtr)
 	// fmt.Printf("*sizePtr = %+v\n", *sizePtr)
-	CreateDroplet(createDropData)
+	_, err = CreateDroplet(createDropData)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // CreateDroplet creates a droplet with provided specs.
-func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) []godo.Droplet {
-	reader := bufio.NewReader(os.Stdin)
-	support.YellowPf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
-	// fmt.Printf("Creating %v droplet(s)?[Y/n] ", reqDataPtr.Names)
-	char, _, err := reader.ReadRune()
+func CreateDroplet(
+	reqDataPtr *godo.DropletMultiCreateRequest) ([]godo.Droplet, error) {
+	confirmed, err := support.UserConfirmDefaultY(
+		support.YellowSp(
+			"Creating %v droplet(s)?", reqDataPtr.Names))
 	if err != nil {
-		panic("Cannot read user inut")
+		return nil, err
 	}
-	if char != 10 && char != 'y' && char != 'Y' {
-		os.Exit(0)
+	if !confirmed {
+		return nil, nil
 	}
 	s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
 	s.Start()
 	droplets, _, err := support.DOClient.Droplets.CreateMultiple(support.Ctx, reqDataPtr)
 	s.Stop()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// fmt.Printf("droplets = %+v\n", droplets)
@@ -133,6 +135,6 @@ func CreateDroplet(reqDataPtr *godo.DropletMultiCreateRequest) []godo.Droplet {
 		// fmt.Printf("d = %+v\n", d)
 		fmt.Println("***************************")
 	}
-	return droplets
+	return droplets, nil
 
 }
