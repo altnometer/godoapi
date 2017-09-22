@@ -2,7 +2,6 @@ package setupk8s
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/altnometer/godoapi/droplet"
 )
@@ -19,7 +18,7 @@ apt-get install -y docker.io
 apt-get install -y --allow-unauthenticated kubelet kubeadm=1.7.0-00 kubectl kubernetes-cni`
 
 // SetUpNode would setup k8s master.
-func SetUpNode(env, reg, ip, token string) {
+func SetUpNode(env, reg, ip, token string) error {
 	userDataPart2 := fmt.Sprintf("\nkubeadm join --token %s %s:6443", token, ip)
 	userData := fmt.Sprintln(userDataPart1, userDataPart2)
 	reqDataPtr := droplet.GetDefaultDropCreateData()
@@ -29,7 +28,10 @@ func SetUpNode(env, reg, ip, token string) {
 	reqDataPtr.Tags = []string{"node", env}
 	reqDataPtr.UserData = userData
 	fmt.Printf("reqDataPtr = %+v\n", reqDataPtr)
-	drSpecs := droplet.CreateDroplet(reqDataPtr)
+	drSpecs, err := droplet.CreateDroplet(reqDataPtr)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("drSpecs = %+v\n", drSpecs)
-	os.Exit(0)
+	return nil
 }
