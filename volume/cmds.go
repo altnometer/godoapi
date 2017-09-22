@@ -175,7 +175,10 @@ func Attach(
 		drCreateData.Names = []string{dropName}
 		drCreateData.Region = vd.Region
 		drCreateData.Tags = []string{"volume", vd.Name}
-		droplets := droplet.CreateDroplet(drCreateData)
+		droplets, err := droplet.CreateDroplet(drCreateData)
+		if err != nil {
+			return nil, nil, err
+		}
 		if len(droplets) == 0 {
 			return nil, nil, fmt.Errorf("failed to create droplet to attach volume to")
 		}
