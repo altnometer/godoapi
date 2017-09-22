@@ -19,10 +19,10 @@ import (
 func ParseArgsDeleteDrop(args []string) error {
 	// client := support.GetDOClient()
 	subCmd := flag.NewFlagSet("delete", flag.ExitOnError)
-	// regPtr := subCmd.String("region", "fra1", "-region=fra1")
-	var multiTag support.NameList
+	tagPtr := subCmd.String("tag", "", "-tag=<all|tag1[,tag2...]>")
+	// var multiTag support.NameList
 	// TODO: add functionality fo 'all' tag option
-	subCmd.Var(&multiTag, "tag", "-tag=<all|tag1[,tag2...]>")
+	// subCmd.Var(&multiTag, "tag", "-tag=<all|tag1[,tag2...]>")
 
 	subCmd.Parse(args)
 	if len(args) < 1 {
@@ -36,8 +36,61 @@ func ParseArgsDeleteDrop(args []string) error {
 	// 		os.Exit(1)
 	// 	}
 	// }
-	if multiTag[0] == "all" {
-		return deleteAllDroplets()
+	switch *tagPtr {
+	case "all":
+		if err := deleteAllDroplets(); err != nil {
+			return err
+		}
+	case "admin":
+		// TODO: change to confirming intent.
+		support.RedLn("Delete admin server?")
+		if err := deleteDropsByTag("admin"); err != nil {
+			return err
+		}
+	default:
+		if err := deleteDropsByTag(*tagPtr); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func deleteDropsByTag(tag string) error {
+	volsByDropIds := getAttVolsByDropIds()
+	// fmt.Printf("volsByDropIds = %+v\n", volsByDropIds)
+	droplets, err := ReturnDropletsByTag(tag)
+	if err != nil {
+		return err
+	}
+	for i, d := range droplets {
+		for id, v := range volsByDropIds {
+			if id == d.ID {
+				if err := deleteDropWithAttVols(d, v); err != nil {
+					return err
+				}
+				droplets = append(droplets[:i], droplets[i+1:]...)
+			}
+		}
+	}
+	for _, dData := range droplets {
+		dID := dData.ID
+		fmt.Printf("Delete droplet  Name  %v, ID %v, tag %v?[y/N] ",
+			support.YellowSp(dData.Name), dID, dData.Tags)
+		reader := bufio.NewReader(os.Stdin)
+		char, _, err := reader.ReadRune()
+		if err != nil {
+			panic(err)
+		}
+		if char == 10 && char != 'y' && char != 'Y' {
+			continue
+		}
+		s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
+		s.Start()
+		res, err := support.DOClient.Droplets.Delete(support.Ctx, dID)
+		s.Stop()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("res = %+v\n\n", res)
 	}
 	return nil
 }
