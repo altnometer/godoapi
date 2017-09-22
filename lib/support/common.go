@@ -159,6 +159,24 @@ func GetUserInput(promt string) string {
 	return strings.Replace(text, "\n", "", -1)
 }
 
+// UserConfirmDefaultY return true for input 'y|Y' or not input.
+func UserConfirmDefaultY(prompt string) (conf bool, err error) {
+	fmt.Println(prompt)
+	fmt.Println("[Y/n]")
+	reader := bufio.NewReader(os.Stdin)
+	char, _, err := reader.ReadRune()
+	if err != nil {
+		return false, err
+	}
+	if char == 10 {
+		return true, nil
+	}
+	if char != 'y' && char != 'Y' {
+		return false, nil
+	}
+	return true, nil
+}
+
 // UserConfirmDefaultN return false for any input but 'y|Y'
 func UserConfirmDefaultN(prompt string) (conf bool, err error) {
 	fmt.Println(prompt)
