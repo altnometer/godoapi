@@ -133,10 +133,11 @@ func setupAdmin(
 	if len(droplets) > 0 {
 		dr = droplets[0]
 	} else {
-		dr, err = droplet.CreateDroplet(crData)[0]
+		drops, err := droplet.CreateDroplet(crData)
 		if err != nil {
 			return err
 		}
+		dr := drops[0]
 		fmt.Println("Wait for the droplet to boot up...")
 		time.Sleep(10 * time.Second)
 		dr = droplet.ReturnDropletByID(dr.ID)
