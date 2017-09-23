@@ -9,8 +9,10 @@ import (
 	"github.com/altnometer/godoapi/lib/support"
 )
 
-var argK8SFailMsg = fmt.Sprintf("Provide <%s|%s> subcommand, please.",
-	support.YellowSp("create"), support.YellowSp("delete"))
+var argK8SFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
+	support.YellowSp("create"),
+	support.YellowSp("add-node"),
+	support.YellowSp("delete"))
 
 // ParseArgs handles os.Args and calls relevant functions in the package.
 func ParseArgs(args []string) error {
@@ -26,6 +28,10 @@ func ParseArgs(args []string) error {
 	case "delete":
 		fmt.Println("Not implemented yet.")
 		return nil
+	case "add-node":
+		if err := parseAddNodeArgs(args[1:]); err != nil {
+			return err
+		}
 	default:
 		fmt.Print("Incorrect arg: ")
 		support.RedBold.Println(args[0])
@@ -35,6 +41,30 @@ func ParseArgs(args []string) error {
 	return nil
 }
 
+func parseAddNodeArgs(args []string) error {
+	subCmd := flag.NewFlagSet("add-node", flag.ExitOnError)
+	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
+	regPtr := subCmd.String("region", "fra1", "-region=fra1")
+	sizePtr := subCmd.String("size", "1mb", "-size=<512mb|1gb|2gb...>")
+	subCmd.Parse(args)
+	if subCmd.Parsed() {
+		if err := support.ValidateRegions(regPtr); err != nil {
+			fmt.Println(err)
+			subCmd.PrintDefaults()
+			return err
+		}
+	}
+	if len(args) < 1 {
+		err := support.ErrBadArgs
+		support.Red.Println(err)
+		subCmd.PrintDefaults()
+		return err
+	}
+	if err := addNode(*envPtr, *regPtr, *sizePtr); err != nil {
+		return err
+	}
+	return nil
+}
 func parseArgsSetupK8S(args []string) error {
 	subCmd := flag.NewFlagSet("setupk8s", flag.ExitOnError)
 	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
@@ -91,7 +121,7 @@ func parseArgsSetupK8S(args []string) error {
 		return err
 	}
 	if err := SetUpNode(*envPtr, *regPtr, ip, token); err != nil {
-		return nil
+		return err
 	}
 	return nil
 }
