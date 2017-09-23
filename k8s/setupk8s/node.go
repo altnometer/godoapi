@@ -9,7 +9,7 @@ import (
 	"github.com/altnometer/godoapi/lib/support"
 )
 
-// SetUpNode would setup k8s master.
+// SetUpNode would setup k8s node.
 func SetUpNode(env, reg, ip, token string) error {
 	runningNodes, err := droplet.ReturnDropletsByTag("node")
 	var publicIP string
