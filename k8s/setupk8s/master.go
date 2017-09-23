@@ -38,6 +38,7 @@ func SetUpMaster(
 				return "", "", err
 			}
 			support.RedPf("Droplet with %s name already exist!\n", support.Master1Name)
+			break
 		}
 	}
 	if publicIP == "" || privateIP == "" {
