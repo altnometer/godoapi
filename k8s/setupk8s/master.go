@@ -2,15 +2,12 @@ package setupk8s
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
 	"github.com/altnometer/godoapi/lib/support"
-	"github.com/briandowns/spinner"
 	"github.com/digitalocean/godo"
 )
 
@@ -19,7 +16,7 @@ func SetUpMaster(
 	crData *godo.DropletMultiCreateRequest,
 	userName,
 	password,
-	sshKeyPath string) (string, string) {
+	sshKeyPath string) (string, string, error) {
 	sshCmdGetToken := []string{
 		"sudo",
 		"kubeadm", "token", "list", "|", "awk",
@@ -27,74 +24,84 @@ func SetUpMaster(
 	}
 	runningMasters, err := droplet.ReturnDropletsByTag("master")
 	if err != nil {
-		log.Fatal(err)
+		return "", "", err
 	}
 	var token string
 	var publicIP string
+	var privateIP string
 	for _, d := range runningMasters {
 		if d.Name == support.Master1Name {
-			publicIP, err := d.PublicIPv4()
-			if err != nil {
-				log.Fatal(err)
+			if publicIP, err = d.PublicIPv4(); err != nil {
+				return "", "", err
 			}
-			token = support.FetchSSHOutput("root", publicIP, sshKeyPath, sshCmdGetToken)
-			support.YellowLn("Set env var for k8s token.")
-			os.Setenv("K8SToken", token)
-			support.RedPf("Droplet with %s name already exist!", support.Master1Name)
-			// return d["publicIP"], token
+			if privateIP, err = d.PrivateIPv4(); err != nil {
+				return "", "", err
+			}
+			support.RedPf("Droplet with %s name already exist!\n", support.Master1Name)
 		}
 	}
-	if token == "" {
-		drSpecs := droplet.CreateDroplet(crData)
-		s := spinner.New(spinner.CharSets[9], 150*time.Millisecond)
-		s.Start()
-		// Give it some time for IPs to be assigned to the droplets.
-		support.YellowLn("Initializing the droplet ...")
-		time.Sleep(time.Second * 10)
-		s.Stop()
+	if publicIP == "" || privateIP == "" {
+		drSpecs, err := droplet.CreateDroplet(crData)
+		if err != nil {
+			return "", "", err
+		}
+		if drSpecs != nil {
+			support.YellowLn("Initializing the droplet ...")
+			time.Sleep(time.Second * 10)
+		}
 		for _, d := range drSpecs {
 			if d.Name != "" {
 				support.RedLn("Only SINGLE master is handled currently!!!")
 				dData := droplet.ReturnDropletByID(d.ID)
-				publicIP, err = dData.PublicIPv4()
-				if err != nil {
-					log.Fatal(err)
+				if publicIP, err = dData.PublicIPv4(); err != nil {
+					return "", "", err
+				}
+				if privateIP, err = dData.PrivateIPv4(); err != nil {
+					return "", "", err
 				}
 				break
 			}
 		}
 	}
-	if publicIP == "" {
-		panic("No publicIP for k8s master host, cannot continue!")
+	if publicIP == "" || privateIP == "" {
+		return "", "", fmt.Errorf("no publicIP or privateIP for k8s master host, cannot continue")
 	}
-	// execSSH(userName, publicIP, sshKeyPath)
-	// bash master.sh --TARGET_MACHINE_IP 165.227.134.109 --PATH_TO_SSH_PRIV_KEYS ~/.ssh/circleci --USERNAME sally --USER_PASSWORD las
-	arg := []string{
-		"/home/sam/redmoo/devops/k8s/setupcluster/docean/master.sh",
-		"--TARGET_MACHINE_IP",
-		publicIP,
-		"--PATH_TO_SSH_PRIV_KEYS",
-		sshKeyPath,
-		"--USERNAME",
-		userName,
-		"--USER_PASSWORD",
-		password,
+	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/master-1.sh"
+	cmdOpts := []string{
+		"--TARGET_MACHINE_IP", publicIP,
+		"--PATH_TO_SSH_PRIV_KEYS", sshKeyPath,
+		"--USERNAME", userName,
+		"--USER_PASSWORD", password,
 	}
-	argstr := strings.Join(arg, " ")
-	support.YellowLn("Executing ssh from golang with following args: ")
-	fmt.Printf("argstr = %+v\n", argstr)
-
-	// cmdOut, err := exec.Command("ssh", arg...).Output()
-	cmd := exec.Command("bash", arg...)
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	args := append([]string{
+		"scp", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
+		"-i", sshKeyPath, scriptPath,
+		"root" + "@" + publicIP + ":/root",
+	})
+	if err := support.ExecCmd(args); err != nil {
+		return "", "", err
+	}
+	cmd := fmt.Sprintf(
+		"/bin/bash ./%s %s",
+		filepath.Base(scriptPath), strings.Join(cmdOpts, " "))
+	sshRootClient, err := support.GetSSHClient("root", publicIP)
 	if err != nil {
-		panic(err)
+		return "", "", err
+	}
+	defer sshRootClient.Close()
+	sshSession, err := support.GetSSHInterSession(sshRootClient)
+	if err != nil {
+		return "", "", err
+	}
+	if err = sshSession.Run(cmd); err != nil {
+		return "", "", err
+	}
+	scriptPath = "/home/sam/redmoo/devops/k8s/setupcluster/docean/master-2.sh"
+	args = append([]string{"sudo", "-E", "bash", scriptPath}, cmdOpts...)
+	if err := support.ExecCmd(args); err != nil {
+		return "", "", err
 	}
 	token = support.FetchSSHOutput("root", publicIP, sshKeyPath, sshCmdGetToken)
-	support.YellowLn("Set env var for k8s token.")
-	os.Setenv("K8SToken", token)
-	return publicIP, token
+	// return publicIP, token, nil
+	return privateIP, token, nil
 }
