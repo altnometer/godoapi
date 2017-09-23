@@ -2,36 +2,70 @@ package setupk8s
 
 import (
 	"fmt"
+	"path/filepath"
+	"time"
 
 	"github.com/altnometer/godoapi/droplet"
+	"github.com/altnometer/godoapi/lib/support"
 )
-
-var userDataPart1 = `#! /bin/bash
-
-apt-get update && apt-get upgrade -y
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-cat <<EOF2 > /etc/apt/sources.list.d/kubernetes.list
-deb http://apt.kubernetes.io/ kubernetes-xenial main
-EOF2
-apt-get update -y
-apt-get install -y docker.io
-apt-get install -y --allow-unauthenticated kubelet kubeadm=1.7.0-00 kubectl kubernetes-cni`
 
 // SetUpNode would setup k8s master.
 func SetUpNode(env, reg, ip, token string) error {
-	userDataPart2 := fmt.Sprintf("\nkubeadm join --token %s %s:6443", token, ip)
-	userData := fmt.Sprintln(userDataPart1, userDataPart2)
-	reqDataPtr := droplet.GetDefaultDropCreateData()
-	reqDataPtr.Size = "1gb"
-	reqDataPtr.Region = reg
-	reqDataPtr.Names = []string{"node-1"}
-	reqDataPtr.Tags = []string{"node", env}
-	reqDataPtr.UserData = userData
-	fmt.Printf("reqDataPtr = %+v\n", reqDataPtr)
-	drSpecs, err := droplet.CreateDroplet(reqDataPtr)
+	runningNodes, err := droplet.ReturnDropletsByTag("node")
+	var publicIP string
+	for _, d := range runningNodes {
+		if publicIP, err = d.PublicIPv4(); err != nil {
+			return err
+		}
+		fmt.Printf("publicIP = %+v\n", publicIP)
+	}
+	if publicIP == "" {
+		reqDataPtr := droplet.GetDefaultDropCreateData()
+		reqDataPtr.Size = "1gb"
+		reqDataPtr.Region = reg
+		reqDataPtr.Names = []string{"node-1"}
+		reqDataPtr.Tags = []string{"node", env}
+		drSpecs, err := droplet.CreateDroplet(reqDataPtr)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Wait for the droplet to initialize ...")
+		time.Sleep(10 * time.Second)
+		dData := droplet.ReturnDropletByID(drSpecs[0].ID)
+		if publicIP, err = dData.PublicIPv4(); err != nil {
+			return err
+		}
+	}
+	scriptPath := "/home/sam/redmoo/devops/k8s/setupcluster/docean/node-1.sh"
+	args := append([]string{
+		"scp", "-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no",
+		scriptPath,
+		"root" + "@" + publicIP + ":/root",
+	})
+	if err := support.ExecCmd(args); err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf(
+		"/bin/bash ./%s",
+		filepath.Base(scriptPath))
+	sshRootClient, err := support.GetSSHClient("root", publicIP)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("drSpecs = %+v\n", drSpecs)
+	defer sshRootClient.Close()
+	sshSession, err := support.GetSSHInterSession(sshRootClient)
+	if err != nil {
+		return err
+	}
+	if err = sshSession.Run(cmd); err != nil {
+		return err
+	}
+	sshSession.Close()
+	time.Sleep(2 * time.Second)
+	sshSession, err = support.GetSSHInterSession(sshRootClient)
+	userDataPart2 := fmt.Sprintf("\nkubeadm join --token %s %s:6443", token, ip)
+	if err = sshSession.Run(userDataPart2); err != nil {
+		return err
+	}
 	return nil
 }
