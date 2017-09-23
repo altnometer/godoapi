@@ -122,6 +122,16 @@ func ValidateRegions(regPtr *string) error {
 
 ////////////////////////functions//////////////////////////////////////////////
 
+// StringInSlice checks if a given string is in a slice.
+func StringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 func getHomeDir() (string, error) {
 	user, err := user.Current()
 	if err != nil {
@@ -262,6 +272,34 @@ func GetSSHKeyPath() string {
 		sshKeyPath = GetUserInput("Type in a DOSSHKeyPath: ")
 	}
 	return sshKeyPath
+}
+
+// GetSSHOutput executes ssh cmd and returns cmd output.
+// sshKey must be added with "eval $(ssh-agent -s) && ssh-add ~/.ssh/privkey"
+func GetSSHOutput(userName, ip string, sshCmds []string) string {
+	cmdArgs := append(
+		[]string{
+			"-o",
+			"UserKnownHostsFile=/dev/null",
+			"-o",
+			"StrictHostKeyChecking=no",
+			fmt.Sprintf("%s@%s", userName, ip),
+		},
+		sshCmds...,
+	)
+	// str := strings.Join(cmdArgs[:], " ")
+	// fmt.Printf("str = %+v\n", str)
+	// os.Exit(0)
+	var (
+		cmdOut []byte
+		err    error
+	)
+	cmdName := "ssh"
+	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
+		RedLn("There was an error running ssh command: ", err)
+		os.Exit(1)
+	}
+	return string(cmdOut)
 }
 
 // FetchSSHOutput executes ssh cmd and returns cmd output.
