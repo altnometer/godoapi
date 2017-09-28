@@ -10,8 +10,10 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-var argIPFailMsg = fmt.Sprintf("Provide <%s|%s|%s> subcommand, please.",
-	support.YellowSp("list"), support.YellowSp("create"), support.YellowSp("delete"))
+var argIPFailMsg = fmt.Sprintf("Provide <%s|%s|%s|%s> subcommand, please.",
+	support.YellowSp("assign"),
+	support.YellowSp("list"),
+	support.YellowSp("create"), support.YellowSp("delete"))
 
 // ParseArgs handles os.Args and calls relevant functions in the package.
 func ParseArgs(args []string) error {
