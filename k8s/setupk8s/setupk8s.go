@@ -45,7 +45,7 @@ func parseAddNodeArgs(args []string) error {
 	subCmd := flag.NewFlagSet("add-node", flag.ExitOnError)
 	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
 	regPtr := subCmd.String("region", "fra1", "-region=fra1")
-	sizePtr := subCmd.String("size", "1mb", "-size=<512mb|1gb|2gb...>")
+	sizePtr := subCmd.String("size", "1gb", "-size=<512mb|1gb|2gb...>")
 	subCmd.Parse(args)
 	if subCmd.Parsed() {
 		if err := support.ValidateRegions(regPtr); err != nil {
@@ -69,7 +69,7 @@ func parseArgsSetupK8S(args []string) error {
 	subCmd := flag.NewFlagSet("setupk8s", flag.ExitOnError)
 	envPtr := subCmd.String("env", "dev", "-env=<prod|test|stage|dev>")
 	regPtr := subCmd.String("region", "fra1", "-region=fra1")
-	sizePtr := subCmd.String("size", "1mb", "-size=<512mb|1gb|2gb...>")
+	sizePtr := subCmd.String("size", "1gb", "-size=<512mb|1gb|2gb...>")
 	userNamePtr := subCmd.String("username", "", "-username=<somename>")
 	passwordPtr := subCmd.String("password", "", "-password=<mypassword>")
 	sshKeyPathPtr := subCmd.String("sshkeypath", "", "-sshkeypath=</ssh/path/myprivkey>")
