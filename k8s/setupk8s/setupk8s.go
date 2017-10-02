@@ -54,12 +54,12 @@ func parseAddNodeArgs(args []string) error {
 			return err
 		}
 	}
-	if len(args) < 1 {
-		err := support.ErrBadArgs
-		support.Red.Println(err)
-		subCmd.PrintDefaults()
-		return err
-	}
+	// if len(args) < 1 {
+	// 	err := support.ErrBadArgs
+	// 	support.Red.Println(err)
+	// 	subCmd.PrintDefaults()
+	// 	return err
+	// }
 	if err := addNode(*envPtr, *regPtr, *sizePtr); err != nil {
 		return err
 	}
