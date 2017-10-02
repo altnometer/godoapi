@@ -48,6 +48,10 @@ func addNode(env, reg, size string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Running nodes:")
+	for i, d := range runningNodes {
+		fmt.Printf("    %d. %+v\n", i, support.YellowSp(d.Name))
+	}
 	name := fmt.Sprintf("node-%02d", len(runningNodes)+1)
 	node, err := createNode(name, env, reg, size)
 	if err != nil {
