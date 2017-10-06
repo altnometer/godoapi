@@ -3,6 +3,7 @@ package setupk8s
 import (
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/altnometer/godoapi/droplet"
@@ -48,9 +49,32 @@ func addNode(env, reg, size string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Running nodes:")
-	for i, d := range runningNodes {
-		fmt.Printf("    %d. %+v\n", i, support.YellowSp(d.Name))
+	if len(runningNodes) > 0 {
+		fmt.Println("Running nodes:")
+		for i, d := range runningNodes {
+			fmt.Printf("    %d. %+v\n", i, support.YellowSp(d.Name))
+		}
+		confirmed, err := support.UserConfirmDefaultN("Redeploy any nodes?")
+		if err != nil {
+			return err
+		}
+		if confirmed {
+			drNum, err := strconv.ParseInt(
+				support.GetUserInput("Select host # if you wish to redeploy node: "), 10, 0)
+			if err != nil {
+				return err
+			}
+			if drNum > 0 || drNum < int64(len(runningNodes)) {
+				nodeRedeploy := runningNodes[drNum]
+				if nodePubIP, err = nodeRedeploy.PublicIPv4(); err != nil {
+					return err
+				}
+				if err := execNodeSetupCmds(nodePubIP, masPrivIP, token); err != nil {
+					return err
+				}
+				return nil
+			}
+		}
 	}
 	name := fmt.Sprintf("node-%02d", len(runningNodes)+1)
 	node, err := createNode(name, env, reg, size)
