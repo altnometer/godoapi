@@ -98,8 +98,8 @@ func ParseArgsCreateDrop(args []string) error {
 func CreateDroplet(
 	reqDataPtr *godo.DropletMultiCreateRequest) ([]godo.Droplet, error) {
 	confirmed, err := support.UserConfirmDefaultY(
-		support.YellowSp(
-			"Creating %v droplet(s)?", reqDataPtr.Names))
+		fmt.Sprintf("Creating %v droplet(s)?",
+			support.YellowSp(reqDataPtr.Names)))
 	if err != nil {
 		return nil, err
 	}
