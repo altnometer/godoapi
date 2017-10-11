@@ -131,7 +131,7 @@ func createNode(name, env, reg, size string) (*godo.Droplet, error) {
 	reqDataPtr.Size = size
 	reqDataPtr.Region = reg
 	reqDataPtr.Names = []string{name}
-	reqDataPtr.Tags = []string{"node", env}
+	reqDataPtr.Tags = []string{"k8s", "node", env}
 	drops, err := droplet.CreateDroplet(reqDataPtr)
 	if err != nil {
 		return nil, err

@@ -110,7 +110,7 @@ func parseArgsSetupK8S(args []string) error {
 	createDropData.Size = *sizePtr
 	createDropData.Region = *regPtr
 	createDropData.Names = []string{"master-1"}
-	createDropData.Tags = []string{"master", *envPtr}
+	createDropData.Tags = []string{"k8s", "master", *envPtr}
 	ip, token, err := SetUpMaster(
 		createDropData,
 		*userNamePtr,
