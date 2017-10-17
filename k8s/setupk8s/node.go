@@ -103,7 +103,7 @@ func SetUpNode(env, reg, masterIP, token string) error {
 		}
 	}
 	if publicIP == "" {
-		dData, err := createNode("node-01", env, reg, "1gb")
+		dData, err := createNode("node-01", env, reg, support.NodeMemSize)
 		if err != nil {
 			return err
 		}
