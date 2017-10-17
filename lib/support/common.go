@@ -27,6 +27,9 @@ const VolByIDPrefix string = "scsi-0DO_Volume_"
 // Master1Name holds the name of k8s master node.
 const Master1Name string = "master-1"
 
+// NodeMemSize used when create k8s nodes as default value for -size arg.
+const NodeMemSize = "2gb"
+
 /////////////////////////////errors///////////////////////////////////////////
 
 // ErrBadArgs used when no, or not all args provided.
